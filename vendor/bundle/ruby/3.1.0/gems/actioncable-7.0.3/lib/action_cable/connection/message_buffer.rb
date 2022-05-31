@@ -31,24 +31,24 @@ module ActionCable
       end
 
       private
-        attr_reader :connection
-        attr_reader :buffered_messages
 
-        def valid?(message)
-          message.is_a?(String)
-        end
+      attr_reader :connection, :buffered_messages
 
-        def receive(message)
-          connection.receive message
-        end
+      def valid?(message)
+        message.is_a?(String)
+      end
 
-        def buffer(message)
-          buffered_messages << message
-        end
+      def receive(message)
+        connection.receive message
+      end
 
-        def receive_buffered_messages
-          receive buffered_messages.shift until buffered_messages.empty?
-        end
+      def buffer(message)
+        buffered_messages << message
+      end
+
+      def receive_buffered_messages
+        receive buffered_messages.shift until buffered_messages.empty?
+      end
     end
   end
 end

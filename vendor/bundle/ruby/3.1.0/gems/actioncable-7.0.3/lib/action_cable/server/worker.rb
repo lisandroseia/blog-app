@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "active_support/callbacks"
-require "active_support/core_ext/module/attribute_accessors_per_thread"
-require "action_cable/server/worker/active_record_connection_management"
-require "concurrent"
+require 'active_support/callbacks'
+require 'active_support/core_ext/module/attribute_accessors_per_thread'
+require 'action_cable/server/worker/active_record_connection_management'
+require 'concurrent'
 
 module ActionCable
   module Server
@@ -19,10 +19,10 @@ module ActionCable
 
       def initialize(max_size: 5)
         @executor = Concurrent::ThreadPoolExecutor.new(
-          name: "ActionCable",
+          name: 'ActionCable',
           min_threads: 1,
           max_threads: max_size,
-          max_queue: 0,
+          max_queue: 0
         )
       end
 
@@ -36,21 +36,21 @@ module ActionCable
         @executor.shuttingdown?
       end
 
-      def work(connection, &block)
+      def work(connection, &)
         self.connection = connection
 
-        run_callbacks :work, &block
+        run_callbacks(:work, &)
       ensure
         self.connection = nil
       end
 
       def async_exec(receiver, *args, connection:, &block)
-        async_invoke receiver, :instance_exec, *args, connection: connection, &block
+        async_invoke receiver, :instance_exec, *args, connection:, &block
       end
 
       def async_invoke(receiver, method, *args, connection: receiver, &block)
         @executor.post do
-          invoke(receiver, method, *args, connection: connection, &block)
+          invoke(receiver, method, *args, connection:, &block)
         end
       end
 
@@ -66,9 +66,10 @@ module ActionCable
       end
 
       private
-        def logger
-          ActionCable.server.logger
-        end
+
+      def logger
+        ActionCable.server.logger
+      end
     end
   end
 end

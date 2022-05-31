@@ -14,18 +14,19 @@ module ActionDispatch
       end
 
       private
-        def setup
-          set_server
-          set_port
-        end
 
-        def set_server
-          Capybara.server = :puma, { Silent: self.class.silence_puma } if Capybara.server == Capybara.servers[:default]
-        end
+      def setup
+        set_server
+        set_port
+      end
 
-        def set_port
-          Capybara.always_include_port = true
-        end
+      def set_server
+        Capybara.server = :puma, { Silent: self.class.silence_puma } if Capybara.server == Capybara.servers[:default]
+      end
+
+      def set_port
+        Capybara.always_include_port = true
+      end
     end
   end
 end

@@ -15,14 +15,14 @@ module ActionDispatch
         #   normalize_path("")      # => "/"
         #   normalize_path("/%ab")  # => "/%AB"
         def self.normalize_path(path)
-          path ||= ""
+          path ||= ''
           encoding = path.encoding
           path = +"/#{path}"
-          path.squeeze!("/")
+          path.squeeze!('/')
 
-          unless path == "/"
-            path.delete_suffix!("/")
-            path.gsub!(/(%[a-f0-9]{2})/) { $1.upcase }
+          unless path == '/'
+            path.delete_suffix!('/')
+            path.gsub!(/(%[a-f0-9]{2})/) { Regexp.last_match(1).upcase }
           end
 
           path.force_encoding(encoding)
@@ -31,22 +31,22 @@ module ActionDispatch
         # URI path and fragment escaping
         # https://tools.ietf.org/html/rfc3986
         class UriEncoder # :nodoc:
-          ENCODE   = "%%%02X"
+          ENCODE = '%%%02X'
           US_ASCII = Encoding::US_ASCII
-          UTF_8    = Encoding::UTF_8
-          EMPTY    = (+"").force_encoding(US_ASCII).freeze
-          DEC2HEX  = (0..255).map { |i| (ENCODE % i).force_encoding(US_ASCII) }
+          UTF_8 = Encoding::UTF_8
+          EMPTY = (+'').force_encoding(US_ASCII).freeze
+          DEC2HEX = (0..255).map { |i| (ENCODE % i).force_encoding(US_ASCII) }
 
-          ALPHA = "a-zA-Z"
-          DIGIT = "0-9"
+          ALPHA = 'a-zA-Z'
+          DIGIT = '0-9'
           UNRESERVED = "#{ALPHA}#{DIGIT}\\-\\._~"
           SUB_DELIMS = "!\\$&'\\(\\)\\*\\+,;="
 
-          ESCAPED  = /%[a-zA-Z0-9]{2}/.freeze
+          ESCAPED = /%[a-zA-Z0-9]{2}/
 
-          FRAGMENT = /[^#{UNRESERVED}#{SUB_DELIMS}:@\/?]/.freeze
-          SEGMENT  = /[^#{UNRESERVED}#{SUB_DELIMS}:@]/.freeze
-          PATH     = /[^#{UNRESERVED}#{SUB_DELIMS}:@\/]/.freeze
+          FRAGMENT = %r{[^#{UNRESERVED}#{SUB_DELIMS}:@/?]}
+          SEGMENT = /[^#{UNRESERVED}#{SUB_DELIMS}:@]/
+          PATH = %r{[^#{UNRESERVED}#{SUB_DELIMS}:@/]}
 
           def escape_fragment(fragment)
             escape(fragment, FRAGMENT)
@@ -62,19 +62,20 @@ module ActionDispatch
 
           def unescape_uri(uri)
             encoding = uri.encoding == US_ASCII ? UTF_8 : uri.encoding
-            uri.gsub(ESCAPED) { |match| [match[1, 2].hex].pack("C") }.force_encoding(encoding)
+            uri.gsub(ESCAPED) { |match| [match[1, 2].hex].pack('C') }.force_encoding(encoding)
           end
 
           private
-            def escape(component, pattern)
-              component.gsub(pattern) { |unsafe| percent_encode(unsafe) }.force_encoding(US_ASCII)
-            end
 
-            def percent_encode(unsafe)
-              safe = EMPTY.dup
-              unsafe.each_byte { |b| safe << DEC2HEX[b] }
-              safe
-            end
+          def escape(component, pattern)
+            component.gsub(pattern) { |unsafe| percent_encode(unsafe) }.force_encoding(US_ASCII)
+          end
+
+          def percent_encode(unsafe)
+            safe = EMPTY.dup
+            unsafe.each_byte { |b| safe << DEC2HEX[b] }
+            safe
+          end
         end
 
         ENCODER = UriEncoder.new

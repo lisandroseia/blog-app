@@ -43,11 +43,11 @@ module ActionController
         if original_script_name
           options[:original_script_name] = original_script_name
         else
-          if same_origin
-            options[:script_name] = request.script_name.empty? ? "" : request.script_name.dup
-          else
-            options[:script_name] = script_name
-          end
+          options[:script_name] = if same_origin
+                                    request.script_name.empty? ? '' : request.script_name.dup
+                                  else
+                                    script_name
+                                  end
         end
         options.freeze
       else

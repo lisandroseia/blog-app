@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_support/descendants_tracker"
+require 'active_support/descendants_tracker'
 
 module ActionMailer
   module Previews # :nodoc:
@@ -42,9 +42,7 @@ module ActionMailer
       def register_preview_interceptor(interceptor)
         preview_interceptor = interceptor_class_for(interceptor)
 
-        unless preview_interceptors.include?(preview_interceptor)
-          preview_interceptors << preview_interceptor
-        end
+        preview_interceptors << preview_interceptor unless preview_interceptors.include?(preview_interceptor)
       end
 
       # Unregister a previously registered Interceptor.
@@ -55,14 +53,15 @@ module ActionMailer
       end
 
       private
-        def interceptor_class_for(interceptor)
-          case interceptor
-          when String, Symbol
-            interceptor.to_s.camelize.constantize
-          else
-            interceptor
-          end
+
+      def interceptor_class_for(interceptor)
+        case interceptor
+        when String, Symbol
+          interceptor.to_s.camelize.constantize
+        else
+          interceptor
         end
+      end
     end
   end
 
@@ -114,29 +113,28 @@ module ActionMailer
 
       # Returns the underscored name of the mailer preview without the suffix.
       def preview_name
-        name.delete_suffix("Preview").underscore
+        name.delete_suffix('Preview').underscore
       end
 
       private
-        def load_previews
-          if preview_path
-            Dir["#{preview_path}/**/*_preview.rb"].sort.each { |file| require_dependency file }
-          end
-        end
 
-        def preview_path
-          Base.preview_path
-        end
+      def load_previews
+        Dir["#{preview_path}/**/*_preview.rb"].sort.each { |file| require_dependency file } if preview_path
+      end
 
-        def show_previews
-          Base.show_previews
-        end
+      def preview_path
+        Base.preview_path
+      end
 
-        def inform_preview_interceptors(message)
-          Base.preview_interceptors.each do |interceptor|
-            interceptor.previewing_email(message)
-          end
+      def show_previews
+        Base.show_previews
+      end
+
+      def inform_preview_interceptors(message)
+        Base.preview_interceptors.each do |interceptor|
+          interceptor.previewing_email(message)
         end
+      end
     end
   end
 end

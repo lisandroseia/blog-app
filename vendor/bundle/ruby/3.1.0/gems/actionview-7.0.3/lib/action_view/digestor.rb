@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "action_view/dependency_tracker"
+require 'action_view/dependency_tracker'
 
 module ActionView
   class Digestor
@@ -13,11 +13,11 @@ module ActionView
       # * <tt>format</tt>       - Template format
       # * <tt>finder</tt>       - An instance of <tt>ActionView::LookupContext</tt>
       # * <tt>dependencies</tt> - An array of dependent views
-      def digest(name:, format: nil, finder:, dependencies: nil)
+      def digest(name:, finder:, format: nil, dependencies: nil)
         if dependencies.nil? || dependencies.empty?
           cache_key = "#{name}.#{format}"
         else
-          dependencies_suffix = dependencies.flatten.tap(&:compact!).join(".")
+          dependencies_suffix = dependencies.flatten.tap(&:compact!).join('.')
           cache_key = "#{name}.#{format}.#{dependencies_suffix}"
         end
 
@@ -27,9 +27,11 @@ module ActionView
           finder.digest_cache.fetch(cache_key) do # re-check under lock
             path = TemplatePath.parse(name)
             root = tree(path.to_s, finder, path.partial?)
-            dependencies.each do |injected_dep|
-              root.children << Injected.new(injected_dep, nil, nil)
-            end if dependencies
+            if dependencies
+              dependencies.each do |injected_dep|
+                root.children << Injected.new(injected_dep, nil, nil)
+              end
+            end
             finder.digest_cache[cache_key] = root.digest(finder)
           end
         end
@@ -41,8 +43,8 @@ module ActionView
 
       # Create a dependency tree for template named +name+.
       def tree(name, finder, partial = false, seen = {})
-        logical_name = name.gsub(%r|/_|, "/")
-        interpolated = name.include?("#")
+        logical_name = name.gsub(%r{/_}, '/')
+        interpolated = name.include?('#')
 
         path = TemplatePath.parse(name)
 
@@ -53,7 +55,7 @@ module ActionView
             node = seen[template.identifier] = Node.create(name, logical_name, template, partial)
 
             deps = DependencyTracker.find_dependencies(name, template, finder.view_paths)
-            deps.uniq { |n| n.gsub(%r|/_|, "/") }.each do |dep_file|
+            deps.uniq { |n| n.gsub(%r{/_}, '/') }.each do |dep_file|
               node.children << tree(dep_file, finder, true, seen)
             end
             node
@@ -68,11 +70,12 @@ module ActionView
       end
 
       private
-        def find_template(finder, name, prefixes, partial, keys)
-          finder.disable_cache do
-            finder.find_all(name, prefixes, partial, keys).first
-          end
+
+      def find_template(finder, name, prefixes, partial, keys)
+        finder.disable_cache do
+          finder.find_all(name, prefixes, partial, keys).first
         end
+      end
     end
 
     class Node
@@ -84,10 +87,10 @@ module ActionView
       end
 
       def initialize(name, logical_name, template, children = [])
-        @name         = name
+        @name = name
         @logical_name = logical_name
-        @template     = template
-        @children     = children
+        @template = template
+        @children = children
       end
 
       def digest(finder, stack = [])
@@ -100,11 +103,11 @@ module ActionView
             false
           else
             finder.digest_cache[node.name] ||= begin
-                                                 stack.push node
-                                                 node.digest(finder, stack).tap { stack.pop }
-                                               end
+              stack.push node
+              node.digest(finder, stack).tap { stack.pop }
+            end
           end
-        end.join("-")
+        end.join('-')
       end
 
       def to_dep_map
@@ -115,11 +118,11 @@ module ActionView
     class Partial < Node; end
 
     class Missing < Node
-      def digest(finder, _ = []) "" end
+      def digest(_finder, _ = []) = ''
     end
 
     class Injected < Node
-      def digest(finder, _ = []) name end
+      def digest(_finder, _ = []) = name
     end
 
     class NullLogger

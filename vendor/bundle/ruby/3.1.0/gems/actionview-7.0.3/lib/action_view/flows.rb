@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/string/output_safety"
+require 'active_support/core_ext/string/output_safety'
 
 module ActionView
   class OutputFlow # :nodoc:
@@ -24,17 +24,17 @@ module ActionView
     def append(key, value)
       @content[key] << value.to_s
     end
-    alias_method :append!, :append
+    alias append! append
   end
 
   class StreamingFlow < OutputFlow # :nodoc:
     def initialize(view, fiber)
-      @view    = view
-      @parent  = nil
-      @child   = view.output_buffer
+      @view = view
+      @parent = nil
+      @child = view.output_buffer
       @content = view.view_flow.content
-      @fiber   = fiber
-      @root    = Fiber.current.object_id
+      @fiber = fiber
+      @root = Fiber.current.object_id
     end
 
     # Try to get stored content. If the content
@@ -48,11 +48,13 @@ module ActionView
 
         begin
           @waiting_for = key
-          view.output_buffer, @parent = @child, view.output_buffer
+          @parent = view.output_buffer
+          view.output_buffer = @child
           Fiber.yield
         ensure
           @waiting_for = nil
-          view.output_buffer, @child = @parent, view.output_buffer
+          @child = view.output_buffer
+          view.output_buffer = @parent
         end
       end
 
@@ -68,8 +70,9 @@ module ActionView
     end
 
     private
-      def inside_fiber?
-        Fiber.current.object_id != @root
-      end
+
+    def inside_fiber?
+      Fiber.current.object_id != @root
+    end
   end
 end

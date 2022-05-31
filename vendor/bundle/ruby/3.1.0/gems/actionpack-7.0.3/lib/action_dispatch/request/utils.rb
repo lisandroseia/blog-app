@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/hash/indifferent_access"
+require 'active_support/core_ext/hash/indifferent_access'
 
 module ActionDispatch
   class Request
@@ -80,12 +80,13 @@ module ActionDispatch
 
       class CustomParamEncoder # :nodoc:
         def self.encode(request, params, controller, action)
-          return params unless controller && controller.valid_encoding? && encoding_template = action_encoding_template(request, controller, action)
+          return params unless controller && controller.valid_encoding? && encoding_template = action_encoding_template(
+            request, controller, action
+          )
+
           params.except(:controller, :action).each do |key, value|
             ActionDispatch::Request::Utils.each_param_value(value) do |param|
-              if encoding_template[key.to_s]
-                param.force_encoding(encoding_template[key.to_s])
-              end
+              param.force_encoding(encoding_template[key.to_s]) if encoding_template[key.to_s]
             end
           end
           params

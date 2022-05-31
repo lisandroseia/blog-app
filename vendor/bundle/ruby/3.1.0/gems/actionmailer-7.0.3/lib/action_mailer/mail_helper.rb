@@ -18,13 +18,13 @@ module ActionMailer
     #   block_format text
     #   # => "  This is the paragraph.\n\n  * item1\n  * item2\n"
     def block_format(text)
-      formatted = text.split(/\n\r?\n/).collect { |paragraph|
+      formatted = text.split(/\n\r?\n/).collect do |paragraph|
         format_paragraph(paragraph)
-      }.join("\n\n")
+      end.join("\n\n")
 
       # Make list points stand on their own line
-      formatted.gsub!(/[ ]*([*]+) ([^*]*)/) { "  #{$1} #{$2.strip}\n" }
-      formatted.gsub!(/[ ]*([#]+) ([^#]*)/) { "  #{$1} #{$2.strip}\n" }
+      formatted.gsub!(/ *([*]+) ([^*]*)/) { "  #{Regexp.last_match(1)} #{Regexp.last_match(2).strip}\n" }
+      formatted.gsub!(/ *(\#+) ([^#]*)/) { "  #{Regexp.last_match(1)} #{Regexp.last_match(2).strip}\n" }
 
       formatted
     end
@@ -56,17 +56,17 @@ module ActionMailer
       sentences = [[]]
 
       text.split.each do |word|
-        if sentences.first.present? && (sentences.last + [word]).join(" ").length > len
+        if sentences.first.present? && (sentences.last + [word]).join(' ').length > len
           sentences << [word]
         else
           sentences.last << word
         end
       end
 
-      indentation = " " * indent
-      sentences.map! { |sentence|
+      indentation = ' ' * indent
+      sentences.map! do |sentence|
         "#{indentation}#{sentence.join(' ')}"
-      }.join "\n"
+      end.join "\n"
     end
   end
 end

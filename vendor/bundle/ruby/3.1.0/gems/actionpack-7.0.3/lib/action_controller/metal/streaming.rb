@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "rack/chunked"
+require 'rack/chunked'
 
 module ActionController # :nodoc:
   # Allows views to be streamed back to the client as they are rendered.
@@ -194,27 +194,28 @@ module ActionController # :nodoc:
   #
   module Streaming
     private
-      # Set proper cache control and transfer encoding when streaming
-      def _process_options(options)
-        super
-        if options[:stream]
-          if request.version == "HTTP/1.0"
-            options.delete(:stream)
-          else
-            headers["Cache-Control"] ||= "no-cache"
-            headers["Transfer-Encoding"] = "chunked"
-            headers.delete("Content-Length")
-          end
-        end
-      end
 
-      # Call render_body if we are streaming instead of usual +render+.
-      def _render_template(options)
-        if options.delete(:stream)
-          Rack::Chunked::Body.new view_renderer.render_body(view_context, options)
+    # Set proper cache control and transfer encoding when streaming
+    def _process_options(options)
+      super
+      if options[:stream]
+        if request.version == 'HTTP/1.0'
+          options.delete(:stream)
         else
-          super
+          headers['Cache-Control'] ||= 'no-cache'
+          headers['Transfer-Encoding'] = 'chunked'
+          headers.delete('Content-Length')
         end
       end
+    end
+
+    # Call render_body if we are streaming instead of usual +render+.
+    def _render_template(options)
+      if options.delete(:stream)
+        Rack::Chunked::Body.new view_renderer.render_body(view_context, options)
+      else
+        super
+      end
+    end
   end
 end

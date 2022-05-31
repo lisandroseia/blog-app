@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-require "action_dispatch/journey/visitors"
+require 'action_dispatch/journey/visitors'
 
 module ActionDispatch
   module Journey # :nodoc:
     class Ast # :nodoc:
       attr_reader :names, :path_params, :tree, :wildcard_options, :terminals
-      alias :root :tree
+      alias root tree
 
       def initialize(tree, formatted)
         @tree = tree
@@ -39,29 +39,28 @@ module ActionDispatch
       end
 
       private
-        attr_reader :symbols, :stars
 
-        def visit_tree(formatted)
-          tree.each do |node|
-            if node.symbol?
-              path_params << node.to_sym
-              names << node.name
-              symbols << node
-            elsif node.star?
-              stars << node
+      attr_reader :symbols, :stars
 
-              if formatted != false
-                # Add a constraint for wildcard route to make it non-greedy and
-                # match the optional format part of the route by default.
-                wildcard_options[node.name.to_sym] ||= /.+?/m
-              end
-            end
+      def visit_tree(formatted)
+        tree.each do |node|
+          if node.symbol?
+            path_params << node.to_sym
+            names << node.name
+            symbols << node
+          elsif node.star?
+            stars << node
 
-            if node.terminal?
-              terminals << node
+            if formatted != false
+              # Add a constraint for wildcard route to make it non-greedy and
+              # match the optional format part of the route by default.
+              wildcard_options[node.name.to_sym] ||= /.+?/m
             end
           end
+
+          terminals << node if node.terminal?
         end
+      end
     end
 
     module Nodes # :nodoc:
@@ -80,7 +79,7 @@ module ActionDispatch
         end
 
         def to_s
-          Visitors::String::INSTANCE.accept(self, "")
+          Visitors::String::INSTANCE.accept(self, '')
         end
 
         def to_dot
@@ -92,29 +91,29 @@ module ActionDispatch
         end
 
         def name
-          -left.tr("*:", "")
+          -left.tr('*:', '')
         end
 
         def type
           raise NotImplementedError
         end
 
-        def symbol?; false; end
-        def literal?; false; end
-        def terminal?; false; end
-        def star?; false; end
-        def cat?; false; end
-        def group?; false; end
+        def symbol?() = false
+        def literal?() = false
+        def terminal?() = false
+        def star?() = false
+        def cat?() = false
+        def group?() = false
       end
 
       class Terminal < Node # :nodoc:
-        alias :symbol :left
-        def terminal?; true; end
+        alias symbol left
+        def terminal?() = true
       end
 
       class Literal < Terminal # :nodoc:
-        def literal?; true; end
-        def type; :LITERAL; end
+        def literal?() = true
+        def type() = :LITERAL
       end
 
       class Dummy < Literal # :nodoc:
@@ -122,41 +121,41 @@ module ActionDispatch
           super
         end
 
-        def literal?; false; end
+        def literal?() = false
       end
 
       class Slash < Terminal # :nodoc:
-        def type; :SLASH; end
+        def type() = :SLASH
       end
 
       class Dot < Terminal # :nodoc:
-        def type; :DOT; end
+        def type() = :DOT
       end
 
       class Symbol < Terminal # :nodoc:
         attr_accessor :regexp
-        alias :symbol :regexp
+        alias symbol regexp
         attr_reader :name
 
-        DEFAULT_EXP = /[^.\/?]+/
+        DEFAULT_EXP = %r{[^./?]+}
         GREEDY_EXP = /(.+)/
         def initialize(left, regexp = DEFAULT_EXP)
           super(left)
           @regexp = regexp
-          @name = -left.tr("*:", "")
+          @name = -left.tr('*:', '')
         end
 
-        def type; :SYMBOL; end
-        def symbol?; true; end
+        def type() = :SYMBOL
+        def symbol?() = true
       end
 
       class Unary < Node # :nodoc:
-        def children; [left] end
+        def children() = [left]
       end
 
       class Group < Unary # :nodoc:
-        def type; :GROUP; end
-        def group?; true; end
+        def type() = :GROUP
+        def group?() = true
       end
 
       class Star < Unary # :nodoc:
@@ -169,11 +168,11 @@ module ActionDispatch
           @regexp = /.+?/m
         end
 
-        def star?; true; end
-        def type; :STAR; end
+        def star?() = true
+        def type() = :STAR
 
         def name
-          left.name.tr "*:", ""
+          left.name.tr '*:', ''
         end
       end
 
@@ -185,12 +184,12 @@ module ActionDispatch
           @right = right
         end
 
-        def children; [left, right] end
+        def children() = [left, right]
       end
 
       class Cat < Binary # :nodoc:
-        def cat?; true; end
-        def type; :CAT; end
+        def cat?() = true
+        def type() = :CAT
       end
 
       class Or < Node # :nodoc:
@@ -200,7 +199,7 @@ module ActionDispatch
           @children = children
         end
 
-        def type; :OR; end
+        def type() = :OR
       end
     end
   end

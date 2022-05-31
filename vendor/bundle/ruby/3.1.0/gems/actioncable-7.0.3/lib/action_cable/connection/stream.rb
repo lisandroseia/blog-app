@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "thread"
-
 module ActionCable
   module Connection
     #--
@@ -10,9 +8,9 @@ module ActionCable
     # Copyright (c) 2010-2015 James Coglan
     class Stream # :nodoc:
       def initialize(event_loop, socket)
-        @event_loop    = event_loop
+        @event_loop = event_loop
         @socket_object = socket
-        @stream_send   = socket.env["stream.send"]
+        @stream_send = socket.env['stream.send']
 
         @rack_hijack_io = nil
         @write_lock = Mutex.new
@@ -35,9 +33,7 @@ module ActionCable
       end
 
       def write(data)
-        if @stream_send
-          return @stream_send.call(data)
-        end
+        return @stream_send.call(data) if @stream_send
 
         if @write_lock.try_lock
           begin
@@ -74,6 +70,7 @@ module ActionCable
           loop do
             if @write_head.nil?
               return true if @write_buffer.empty?
+
               @write_head = @write_buffer.pop
             end
 
@@ -96,22 +93,24 @@ module ActionCable
       end
 
       def hijack_rack_socket
-        return unless @socket_object.env["rack.hijack"]
+        return unless @socket_object.env['rack.hijack']
 
         # This should return the underlying io according to the SPEC:
-        @rack_hijack_io = @socket_object.env["rack.hijack"].call
+        @rack_hijack_io = @socket_object.env['rack.hijack'].call
         # Retain existing behaviour if required:
-        @rack_hijack_io ||= @socket_object.env["rack.hijack_io"]
+        @rack_hijack_io ||= @socket_object.env['rack.hijack_io']
 
         @event_loop.attach(@rack_hijack_io, self)
       end
 
       private
-        def clean_rack_hijack
-          return unless @rack_hijack_io
-          @event_loop.detach(@rack_hijack_io, self)
-          @rack_hijack_io = nil
-        end
+
+      def clean_rack_hijack
+        return unless @rack_hijack_io
+
+        @event_loop.detach(@rack_hijack_io, self)
+        @rack_hijack_io = nil
+      end
     end
   end
 end

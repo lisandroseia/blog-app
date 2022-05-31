@@ -11,9 +11,10 @@ module Rails
     end
 
     private
-      def reroute(inbound_email)
-        inbound_email.pending!
-        inbound_email.route_later
-      end
+
+    def reroute(inbound_email)
+      inbound_email.pending!
+      inbound_email.route_later
+    end
   end
 end

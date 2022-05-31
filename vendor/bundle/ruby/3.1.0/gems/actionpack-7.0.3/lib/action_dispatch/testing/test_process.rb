@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "action_dispatch/middleware/cookies"
-require "action_dispatch/middleware/flash"
+require 'action_dispatch/middleware/cookies'
+require 'action_dispatch/middleware/flash'
 
 module ActionDispatch
   module TestProcess
@@ -17,9 +17,7 @@ module ActionDispatch
       #
       #   post :change_avatar, params: { avatar: fixture_file_upload('david.png', 'image/png', :binary) }
       def fixture_file_upload(path, mime_type = nil, binary = false)
-        if self.class.file_fixture_path && !File.exist?(path)
-          path = file_fixture(path)
-        end
+        path = file_fixture(path) if self.class.file_fixture_path && !File.exist?(path)
 
         Rack::Test::UploadedFile.new(path, mime_type, binary)
       end
@@ -27,9 +25,9 @@ module ActionDispatch
 
     include FixtureFile
 
-    def assigns(key = nil)
+    def assigns(_key = nil)
       raise NoMethodError,
-        "assigns has been extracted to a gem. To continue using it,
+            "assigns has been extracted to a gem. To continue using it,
         add `gem 'rails-controller-testing'` to your Gemfile."
     end
 

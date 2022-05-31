@@ -48,10 +48,10 @@ module ActionMailbox
     before_action :authenticate_by_password
 
     def create
-      ActionMailbox::InboundEmail.create_and_extract_message_id! params.require("RawEmail")
-    rescue ActionController::ParameterMissing => error
+      ActionMailbox::InboundEmail.create_and_extract_message_id! params.require('RawEmail')
+    rescue ActionController::ParameterMissing => e
       logger.error <<~MESSAGE
-        #{error.message}
+        #{e.message}
 
         When configuring your Postmark inbound webhook, be sure to check the box
         labeled "Include raw email content in JSON payload".

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "action_dispatch/journey/gtg/transition_table"
+require 'action_dispatch/journey/gtg/transition_table'
 
 module ActionDispatch
   module Journey # :nodoc:
@@ -11,20 +11,21 @@ module ActionDispatch
         attr_reader :root, :ast, :endpoints
 
         def initialize(root)
-          @root      = root
-          @ast       = Nodes::Cat.new root, DUMMY_END_NODE
+          @root = root
+          @ast = Nodes::Cat.new root, DUMMY_END_NODE
           @followpos = build_followpos
         end
 
         def transition_table
-          dtrans   = TransitionTable.new
-          marked   = {}.compare_by_identity
+          dtrans = TransitionTable.new
+          marked = {}.compare_by_identity
           state_id = Hash.new { |h, k| h[k] = h.length }.compare_by_identity
-          dstates  = [firstpos(root)]
+          dstates = [firstpos(root)]
 
           until dstates.empty?
             s = dstates.shift
             next if marked[s]
+
             marked[s] = true # mark s
 
             s.group_by { |state| symbol(state) }.each do |sym, ps|
@@ -45,9 +46,7 @@ module ActionDispatch
 
                 if u.include?(DUMMY_END_NODE)
                   ps.each do |state|
-                    if @followpos[state].include?(DUMMY_END_NODE)
-                      dtrans.add_memo(to, state.memo)
-                    end
+                    dtrans.add_memo(to, state.memo) if @followpos[state].include?(DUMMY_END_NODE)
                   end
 
                   dtrans.add_accepting(to)
@@ -69,7 +68,7 @@ module ActionDispatch
             # the default star regex is /(.+)/ which is NOT nullable
             # but since different constraints can be provided we must
             # actually check if this is the case or not.
-            node.regexp.match?("")
+            node.regexp.match?('')
           when Nodes::Or
             node.children.any? { |c| nullable?(c) }
           when Nodes::Cat
@@ -79,7 +78,7 @@ module ActionDispatch
           when Nodes::Unary
             nullable?(node.left)
           else
-            raise ArgumentError, "unknown nullable: %s" % node.class.name
+            raise ArgumentError, 'unknown nullable: %s' % node.class.name
           end
         end
 
@@ -100,7 +99,7 @@ module ActionDispatch
           when Nodes::Terminal
             nullable?(node) ? [] : [node]
           else
-            raise ArgumentError, "unknown firstpos: %s" % node.class.name
+            raise ArgumentError, 'unknown firstpos: %s' % node.class.name
           end
         end
 
@@ -121,27 +120,28 @@ module ActionDispatch
           when Nodes::Unary
             lastpos(node.left)
           else
-            raise ArgumentError, "unknown lastpos: %s" % node.class.name
+            raise ArgumentError, 'unknown lastpos: %s' % node.class.name
           end
         end
 
         private
-          def build_followpos
-            table = Hash.new { |h, k| h[k] = [] }.compare_by_identity
-            @ast.each do |n|
-              case n
-              when Nodes::Cat
-                lastpos(n.left).each do |i|
-                  table[i] += firstpos(n.right)
-                end
+
+        def build_followpos
+          table = Hash.new { |h, k| h[k] = [] }.compare_by_identity
+          @ast.each do |n|
+            case n
+            when Nodes::Cat
+              lastpos(n.left).each do |i|
+                table[i] += firstpos(n.right)
               end
             end
-            table
           end
+          table
+        end
 
-          def symbol(edge)
-            edge.symbol? ? edge.regexp : edge.left
-          end
+        def symbol(edge)
+          edge.symbol? ? edge.regexp : edge.left
+        end
       end
     end
   end

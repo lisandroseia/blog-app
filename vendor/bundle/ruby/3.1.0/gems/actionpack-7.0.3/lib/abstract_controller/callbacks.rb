@@ -31,7 +31,10 @@ module AbstractController
 
     included do
       define_callbacks :process_action,
-                       terminator: ->(controller, result_lambda) { result_lambda.call; controller.performed? },
+                       terminator: lambda { |controller, result_lambda|
+                                     result_lambda.call
+                                     controller.performed?
+                                   },
                        skip_after_callbacks_if_terminated: true
     end
 
@@ -44,7 +47,7 @@ module AbstractController
         @actions.include?(controller.action_name)
       end
 
-      alias after  match?
+      alias after match?
       alias before match?
       alias around match?
     end
@@ -200,7 +203,7 @@ module AbstractController
 
       # set up before_action, prepend_before_action, skip_before_action, etc.
       # for each of before, after, and around.
-      [:before, :after, :around].each do |callback|
+      %i[before after around].each do |callback|
         define_method "#{callback}_action" do |*names, &blk|
           _insert_callbacks(names, blk) do |name, options|
             set_callback(:process_action, callback, name, options)
@@ -227,12 +230,13 @@ module AbstractController
     end
 
     private
-      # Override <tt>AbstractController::Base#process_action</tt> to run the
-      # <tt>process_action</tt> callbacks around the normal behavior.
-      def process_action(...)
-        run_callbacks(:process_action) do
-          super
-        end
+
+    # Override <tt>AbstractController::Base#process_action</tt> to run the
+    # <tt>process_action</tt> callbacks around the normal behavior.
+    def process_action(...)
+      run_callbacks(:process_action) do
+        super
       end
+    end
   end
 end

@@ -8,12 +8,12 @@ module ActionDispatch
     define_callbacks :call
 
     class << self
-      def before(*args, &block)
-        set_callback(:call, :before, *args, &block)
+      def before(*args, &)
+        set_callback(:call, :before, *args, &)
       end
 
-      def after(*args, &block)
-        set_callback(:call, :after, *args, &block)
+      def after(*args, &)
+        set_callback(:call, :after, *args, &)
       end
     end
 
@@ -25,9 +25,10 @@ module ActionDispatch
       error = nil
       result = run_callbacks :call do
         @app.call(env)
-      rescue => error
+      rescue StandardError => e
       end
       raise error if error
+
       result
     end
   end

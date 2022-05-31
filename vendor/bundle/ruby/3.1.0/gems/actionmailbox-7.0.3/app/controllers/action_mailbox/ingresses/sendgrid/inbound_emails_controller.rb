@@ -49,20 +49,21 @@ module ActionMailbox
 
     def create
       ActionMailbox::InboundEmail.create_and_extract_message_id! mail
-    rescue JSON::ParserError => error
-      logger.error error.message
+    rescue JSON::ParserError => e
+      logger.error e.message
       head :unprocessable_entity
     end
 
     private
-      def mail
-        params.require(:email).tap do |raw_email|
-          envelope["to"].each { |to| raw_email.prepend("X-Original-To: ", to, "\n") } if params.key?(:envelope)
-        end
-      end
 
-      def envelope
-        JSON.parse(params.require(:envelope))
+    def mail
+      params.require(:email).tap do |raw_email|
+        envelope['to'].each { |to| raw_email.prepend('X-Original-To: ', to, "\n") } if params.key?(:envelope)
       end
+    end
+
+    def envelope
+      JSON.parse(params.require(:envelope))
+    end
   end
 end

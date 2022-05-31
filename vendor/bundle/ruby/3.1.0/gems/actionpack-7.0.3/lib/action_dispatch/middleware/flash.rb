@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/hash/keys"
+require 'active_support/core_ext/hash/keys'
 
 module ActionDispatch
   # The flash provides a way to pass temporary primitive-types (String, Array, Hash) between actions. Anything you place in the flash will be exposed
@@ -39,7 +39,7 @@ module ActionDispatch
   #
   # See docs on the FlashHash class for more details about the flash.
   class Flash
-    KEY = "action_dispatch.request.flash_hash"
+    KEY = 'action_dispatch.request.flash_hash'
 
     module RequestMethods
       # Access the contents of the flash. Returns a ActionDispatch::Flash::FlashHash.
@@ -48,7 +48,8 @@ module ActionDispatch
       def flash
         flash = flash_hash
         return flash if flash
-        self.flash = Flash::FlashHash.from_session_value(session["flash"])
+
+        self.flash = Flash::FlashHash.from_session_value(session['flash'])
       end
 
       def flash=(flash)
@@ -62,14 +63,12 @@ module ActionDispatch
       def commit_flash # :nodoc:
         return unless session.enabled?
 
-        if flash_hash && (flash_hash.present? || session.key?("flash"))
-          session["flash"] = flash_hash.to_session_value
+        if flash_hash && (flash_hash.present? || session.key?('flash'))
+          session['flash'] = flash_hash.to_session_value
           self.flash = flash_hash.dup
         end
 
-        if session.loaded? && session.key?("flash") && session["flash"].nil?
-          session.delete("flash")
-        end
+        session.delete('flash') if session.loaded? && session.key?('flash') && session['flash'].nil?
       end
 
       def reset_session # :nodoc:
@@ -119,8 +118,8 @@ module ActionDispatch
           end
           new(flashes, flashes.keys)
         when Hash # Rails 4.0
-          flashes = value["flashes"]
-          if discard = value["discard"]
+          flashes = value['flashes']
+          if discard = value['discard']
             flashes.except!(*discard)
           end
           new(flashes, flashes.keys)
@@ -134,13 +133,14 @@ module ActionDispatch
       def to_session_value # :nodoc:
         flashes_to_keep = @flashes.except(*@discard)
         return nil if flashes_to_keep.empty?
-        { "discard" => [], "flashes" => flashes_to_keep }
+
+        { 'discard' => [], 'flashes' => flashes_to_keep }
       end
 
       def initialize(flashes = {}, discard = []) # :nodoc:
         @discard = Set.new(stringify_array(discard))
         @flashes = flashes.stringify_keys
-        @now     = nil
+        @now = nil
       end
 
       def initialize_copy(other)
@@ -195,11 +195,11 @@ module ActionDispatch
         @flashes.clear
       end
 
-      def each(&block)
-        @flashes.each(&block)
+      def each(&)
+        @flashes.each(&)
       end
 
-      alias :merge! :update
+      alias merge! update
 
       def replace(h) # :nodoc:
         @discard.clear
@@ -278,19 +278,21 @@ module ActionDispatch
       end
 
       protected
-        def now_is_loaded?
-          @now
-        end
+
+      def now_is_loaded?
+        @now
+      end
 
       private
-        def stringify_array(array) # :doc:
-          array.map do |item|
-            item.kind_of?(Symbol) ? item.to_s : item
-          end
+
+      def stringify_array(array) # :doc:
+        array.map do |item|
+          item.is_a?(Symbol) ? item.to_s : item
         end
+      end
     end
 
-    def self.new(app) app; end
+    def self.new(app) = app
   end
 
   class Request

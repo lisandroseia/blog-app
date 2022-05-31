@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require "active_support"
-require "active_support/test_case"
-require "active_support/core_ext/hash/indifferent_access"
-require "action_dispatch"
-require "action_dispatch/http/headers"
-require "action_dispatch/testing/test_request"
+require 'active_support'
+require 'active_support/test_case'
+require 'active_support/core_ext/hash/indifferent_access'
+require 'action_dispatch'
+require 'action_dispatch/http/headers'
+require 'action_dispatch/testing/test_request'
 
 module ActionCable
   module Connection
@@ -13,7 +13,7 @@ module ActionCable
       def initialize(name)
         super "Unable to determine the connection to test from #{name}. " +
           "You'll need to specify it using `tests YourConnection` in your " +
-          "test case definition."
+          'test case definition.'
       end
     end
 
@@ -22,8 +22,9 @@ module ActionCable
       #
       #   # Asserts that connection without user_id fails
       #   assert_reject_connection { connect params: { user_id: '' } }
-      def assert_reject_connection(&block)
-        assert_raises(Authorization::UnauthorizedError, "Expected to reject connection but no rejection was made", &block)
+      def assert_reject_connection(&)
+        assert_raises(Authorization::UnauthorizedError, 'Expected to reject connection but no rejection was made',
+                      &)
       end
     end
 
@@ -130,7 +131,7 @@ module ActionCable
       module Behavior
         extend ActiveSupport::Concern
 
-        DEFAULT_PATH = "/cable"
+        DEFAULT_PATH = '/cable'
 
         include ActiveSupport::Testing::ConstantLookup
         include Assertions
@@ -151,12 +152,12 @@ module ActionCable
             when Module
               self._connection_class = connection
             else
-              raise NonInferrableConnectionError.new(connection)
+              raise NonInferrableConnectionError, connection
             end
           end
 
           def connection_class
-            if connection = self._connection_class
+            if connection = _connection_class
               connection
             else
               tests determine_default_connection(name)
@@ -165,9 +166,10 @@ module ActionCable
 
           def determine_default_connection(name)
             connection = determine_constant_from_test_name(name) do |constant|
-              Class === constant && constant < ActionCable::Connection::Base
+              constant.is_a?(Class) && constant < ActionCable::Connection::Base
             end
-            raise NonInferrableConnectionError.new(name) if connection.nil?
+            raise NonInferrableConnectionError, name if connection.nil?
+
             connection
           end
         end
@@ -194,7 +196,7 @@ module ActionCable
 
         # Exert #disconnect on the connection under test.
         def disconnect
-          raise "Must be connected!" if connection.nil?
+          raise 'Must be connected!' if connection.nil?
 
           connection.disconnect if connection.respond_to?(:disconnect)
           @connection = nil
@@ -205,27 +207,26 @@ module ActionCable
         end
 
         private
-          def build_test_request(path, params: nil, headers: {}, session: {}, env: {})
-            wrapped_headers = ActionDispatch::Http::Headers.from_hash(headers)
 
-            uri = URI.parse(path)
+        def build_test_request(path, params: nil, headers: {}, session: {}, env: {})
+          wrapped_headers = ActionDispatch::Http::Headers.from_hash(headers)
 
-            query_string = params.nil? ? uri.query : params.to_query
+          uri = URI.parse(path)
 
-            request_env = {
-              "QUERY_STRING" => query_string,
-              "PATH_INFO" => uri.path
-            }.merge(env)
+          query_string = params.nil? ? uri.query : params.to_query
 
-            if wrapped_headers.present?
-              ActionDispatch::Http::Headers.from_hash(request_env).merge!(wrapped_headers)
-            end
+          request_env = {
+            'QUERY_STRING' => query_string,
+            'PATH_INFO' => uri.path
+          }.merge(env)
 
-            TestRequest.create(request_env).tap do |request|
-              request.session = session.with_indifferent_access
-              request.cookie_jar = cookies
-            end
+          ActionDispatch::Http::Headers.from_hash(request_env).merge!(wrapped_headers) if wrapped_headers.present?
+
+          TestRequest.create(request_env).tap do |request|
+            request.session = session.with_indifferent_access
+            request.cookie_jar = cookies
           end
+        end
       end
 
       include Behavior

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "gem_version"
+require_relative 'gem_version'
 
 module ActionMailer
   # Returns the currently loaded version of Action Mailer as a

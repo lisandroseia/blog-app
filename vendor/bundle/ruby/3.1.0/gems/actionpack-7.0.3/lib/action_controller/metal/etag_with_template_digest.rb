@@ -32,24 +32,25 @@ module ActionController
     end
 
     private
-      def determine_template_etag(options)
-        if template = pick_template_for_etag(options)
-          lookup_and_digest_template(template)
-        end
-      end
 
-      # Pick the template digest to include in the ETag. If the +:template+ option
-      # is present, use the named template. If +:template+ is +nil+ or absent, use
-      # the default controller/action template. If +:template+ is false, omit the
-      # template digest from the ETag.
-      def pick_template_for_etag(options)
-        unless options[:template] == false
-          options[:template] || lookup_context.find_all(action_name, _prefixes).first&.virtual_path
-        end
+    def determine_template_etag(options)
+      if template = pick_template_for_etag(options)
+        lookup_and_digest_template(template)
       end
+    end
 
-      def lookup_and_digest_template(template)
-        ActionView::Digestor.digest name: template, format: nil, finder: lookup_context
+    # Pick the template digest to include in the ETag. If the +:template+ option
+    # is present, use the named template. If +:template+ is +nil+ or absent, use
+    # the default controller/action template. If +:template+ is false, omit the
+    # template digest from the ETag.
+    def pick_template_for_etag(options)
+      unless options[:template] == false
+        options[:template] || lookup_context.find_all(action_name, _prefixes).first&.virtual_path
       end
+    end
+
+    def lookup_and_digest_template(template)
+      ActionView::Digestor.digest name: template, format: nil, finder: lookup_context
+    end
   end
 end

@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "concurrent/map"
-require "action_view/path_set"
-require "action_view/render_parser"
+require 'concurrent/map'
+require 'action_view/path_set'
+require 'action_view/render_parser'
 
 module ActionView
   class DependencyTracker # :nodoc:
@@ -22,13 +22,13 @@ module ActionView
 
     def self.register_tracker(extension, tracker)
       handler = Template.handler_for_extension(extension)
-      if tracker.respond_to?(:supports_view_paths?)
-        @trackers[handler] = tracker
-      else
-        @trackers[handler] = lambda { |name, template, _|
-          tracker.call(name, template)
-        }
-      end
+      @trackers[handler] = if tracker.respond_to?(:supports_view_paths?)
+                             tracker
+                           else
+                             lambda { |name, template, _|
+                               tracker.call(name, template)
+                             }
+                           end
     end
 
     def self.remove_tracker(handler)

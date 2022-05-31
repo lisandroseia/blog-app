@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "mail"
+require 'mail'
 
 module ActionMailbox
   # The +InboundEmail+ is an Active Record that keeps a reference to the raw email stored in Active Storage
@@ -25,12 +25,14 @@ module ActionMailbox
   #   inbound_email.mail.from # => 'david@loudthinking.com'
   #   inbound_email.source # Returns the full rfc822 source of the email as text
   class InboundEmail < Record
-    self.table_name = "action_mailbox_inbound_emails"
+    self.table_name = 'action_mailbox_inbound_emails'
 
-    include Incineratable, MessageId, Routable
+    include Routable
+    include MessageId
+    include Incineratable
 
     has_one_attached :raw_email, service: ActionMailbox.storage_service
-    enum status: %i[ pending processing delivered failed bounced ]
+    enum status: %i[pending processing delivered failed bounced]
 
     def mail
       @mail ||= Mail.from_source(source)

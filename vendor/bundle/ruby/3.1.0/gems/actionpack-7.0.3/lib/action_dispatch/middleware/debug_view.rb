@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-require "pp"
+require 'pp'
 
-require "action_view"
-require "action_view/base"
+require 'action_view'
+require 'action_view/base'
 
 module ActionDispatch
   class DebugView < ActionView::Base # :nodoc:
-    RESCUES_TEMPLATE_PATH = File.expand_path("templates", __dir__)
+    RESCUES_TEMPLATE_PATH = File.expand_path('templates', __dir__)
 
     def initialize(assigns)
       paths = [RESCUES_TEMPLATE_PATH]
@@ -21,26 +21,32 @@ module ActionDispatch
 
     def debug_params(params)
       clean_params = params.clone
-      clean_params.delete("action")
-      clean_params.delete("controller")
+      clean_params.delete('action')
+      clean_params.delete('controller')
 
       if clean_params.empty?
-        "None"
+        'None'
       else
-        PP.pp(clean_params, +"", 200)
+        PP.pp(clean_params, +'', 200)
       end
     end
 
     def debug_headers(headers)
       if headers.present?
-        headers.inspect.gsub(",", ",\n")
+        headers.inspect.gsub(',', ",\n")
       else
-        "None"
+        'None'
       end
     end
 
     def debug_hash(object)
-      object.to_hash.sort_by { |k, _| k.to_s }.map { |k, v| "#{k}: #{v.inspect rescue $!.message}" }.join("\n")
+      object.to_hash.sort_by { |k, _| k.to_s }.map do |k, v|
+        "#{k}: #{begin
+          v.inspect
+        rescue StandardError
+          $!.message
+        end}"
+      end.join("\n")
     end
 
     def render(*)

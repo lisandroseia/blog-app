@@ -15,12 +15,13 @@ module ActionMailbox
     end
 
     private
-      def due?
-        @inbound_email.updated_at < ActionMailbox.incinerate_after.ago.end_of_day
-      end
 
-      def processed?
-        @inbound_email.processed?
-      end
+    def due?
+      @inbound_email.updated_at < ActionMailbox.incinerate_after.ago.end_of_day
+    end
+
+    def processed?
+      @inbound_email.processed?
+    end
   end
 end

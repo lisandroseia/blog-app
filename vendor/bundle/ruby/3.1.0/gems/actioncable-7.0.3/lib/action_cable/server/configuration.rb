@@ -5,11 +5,8 @@ module ActionCable
     # An instance of this configuration object is available via ActionCable.server.config, which allows you to tweak Action Cable configuration
     # in a Rails config initializer.
     class Configuration
-      attr_accessor :logger, :log_tags
-      attr_accessor :connection_class, :worker_pool_size
-      attr_accessor :disable_request_forgery_protection, :allowed_request_origins, :allow_same_origin_as_host
-      attr_accessor :cable, :url, :mount_path
-      attr_accessor :precompile_assets
+      attr_accessor :logger, :log_tags, :connection_class, :worker_pool_size, :disable_request_forgery_protection,
+                    :allowed_request_origins, :allow_same_origin_as_host, :cable, :url, :mount_path, :precompile_assets
 
       def initialize
         @log_tags = []
@@ -25,7 +22,7 @@ module ActionCable
       # If the adapter cannot be found, this will default to the Redis adapter.
       # Also makes sure proper dependencies are required.
       def pubsub_adapter
-        adapter = (cable.fetch("adapter") { "redis" })
+        adapter = (cable.fetch('adapter') { 'redis' })
 
         # Require the adapter itself and give useful feedback about
         #   1. Missing adapter gems and
@@ -39,17 +36,19 @@ module ActionCable
           if e.path == path_to_adapter
             # We can assume that a non-builtin adapter was specified, so it's
             # either misspelled or missing from Gemfile.
-            raise e.class, "Could not load the '#{adapter}' Action Cable pubsub adapter. Ensure that the adapter is spelled correctly in config/cable.yml and that you've added the necessary adapter gem to your Gemfile.", e.backtrace
+            raise e.class,
+                  "Could not load the '#{adapter}' Action Cable pubsub adapter. Ensure that the adapter is spelled correctly in config/cable.yml and that you've added the necessary adapter gem to your Gemfile.", e.backtrace
 
           # Bubbled up from the adapter require. Prefix the exception message
           # with some guidance about how to address it and reraise.
           else
-            raise e.class, "Error loading the '#{adapter}' Action Cable pubsub adapter. Missing a gem it depends on? #{e.message}", e.backtrace
+            raise e.class,
+                  "Error loading the '#{adapter}' Action Cable pubsub adapter. Missing a gem it depends on? #{e.message}", e.backtrace
           end
         end
 
         adapter = adapter.camelize
-        adapter = "PostgreSQL" if adapter == "Postgresql"
+        adapter = 'PostgreSQL' if adapter == 'Postgresql'
         "ActionCable::SubscriptionAdapter::#{adapter}".constantize
       end
     end

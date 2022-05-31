@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "action_dispatch"
-require "active_support/rescuable"
+require 'action_dispatch'
+require 'active_support/rescuable'
 
 module ActionCable
   module Connection
@@ -50,16 +50,19 @@ module ActionCable
       include ActiveSupport::Rescuable
 
       attr_reader :server, :env, :subscriptions, :logger, :worker_pool, :protocol
+
       delegate :event_loop, :pubsub, to: :server
 
       def initialize(server, env, coder: ActiveSupport::JSON)
-        @server, @env, @coder = server, env, coder
+        @server = server
+        @env = env
+        @coder = coder
 
         @worker_pool = server.worker_pool
         @logger = new_tagged_logger
 
-        @websocket      = ActionCable::Connection::WebSocket.new(env, self, event_loop)
-        @subscriptions  = ActionCable::Connection::Subscriptions.new(self)
+        @websocket = ActionCable::Connection::WebSocket.new(env, self, event_loop)
+        @subscriptions = ActionCable::Connection::Subscriptions.new(self)
         @message_buffer = ActionCable::Connection::MessageBuffer.new(self)
 
         @_internal_subscriptions = nil
@@ -100,8 +103,8 @@ module ActionCable
       def close(reason: nil, reconnect: true)
         transmit(
           type: ActionCable::INTERNAL[:message_types][:disconnect],
-          reason: reason,
-          reconnect: reconnect
+          reason:,
+          reconnect:
         )
         websocket.close
       end
@@ -118,7 +121,7 @@ module ActionCable
           identifier: connection_identifier,
           started_at: @started_at,
           subscriptions: subscriptions.identifiers,
-          request_id: @env["action_dispatch.request_id"]
+          request_id: @env['action_dispatch.request_id']
         }
       end
 
@@ -139,126 +142,121 @@ module ActionCable
         logger.error "WebSocket error occurred: #{message}"
       end
 
-      def on_close(reason, code) # :nodoc:
+      def on_close(_reason, _code) # :nodoc:
         send_async :handle_close
       end
 
       private
-        attr_reader :websocket
-        attr_reader :message_buffer
 
-        # The request that initiated the WebSocket connection is available here. This gives access to the environment, cookies, etc.
-        def request # :doc:
-          @request ||= begin
-            environment = Rails.application.env_config.merge(env) if defined?(Rails.application) && Rails.application
-            ActionDispatch::Request.new(environment || env)
-          end
+      attr_reader :websocket, :message_buffer
+
+      # The request that initiated the WebSocket connection is available here. This gives access to the environment, cookies, etc.
+      def request # :doc:
+        @request ||= begin
+          environment = Rails.application.env_config.merge(env) if defined?(Rails.application) && Rails.application
+          ActionDispatch::Request.new(environment || env)
         end
+      end
 
-        # The cookies of the request that initiated the WebSocket connection. Useful for performing authorization checks.
-        def cookies # :doc:
-          request.cookie_jar
+      # The cookies of the request that initiated the WebSocket connection. Useful for performing authorization checks.
+      def cookies # :doc:
+        request.cookie_jar
+      end
+
+      def encode(cable_message)
+        @coder.encode cable_message
+      end
+
+      def decode(websocket_message)
+        @coder.decode websocket_message
+      end
+
+      def handle_open
+        @protocol = websocket.protocol
+        connect if respond_to?(:connect)
+        subscribe_to_internal_channel
+        send_welcome_message
+
+        message_buffer.process!
+        server.add_connection(self)
+      rescue ActionCable::Connection::Authorization::UnauthorizedError
+        close(reason: ActionCable::INTERNAL[:disconnect_reasons][:unauthorized], reconnect: false) if websocket.alive?
+      end
+
+      def handle_close
+        logger.info finished_request_message
+
+        server.remove_connection(self)
+
+        subscriptions.unsubscribe_from_all
+        unsubscribe_from_internal_channel
+
+        disconnect if respond_to?(:disconnect)
+      end
+
+      def send_welcome_message
+        # Send welcome message to the internal connection monitor channel.
+        # This ensures the connection monitor state is reset after a successful
+        # websocket connection.
+        transmit type: ActionCable::INTERNAL[:message_types][:welcome]
+      end
+
+      def allow_request_origin?
+        return true if server.config.disable_request_forgery_protection
+
+        proto = Rack::Request.new(env).ssl? ? 'https' : 'http'
+        if server.config.allow_same_origin_as_host && env['HTTP_ORIGIN'] == "#{proto}://#{env['HTTP_HOST']}"
+          true
+        elsif Array(server.config.allowed_request_origins).any? do |allowed_origin|
+                allowed_origin === env['HTTP_ORIGIN']
+              end
+          true
+        else
+          logger.error("Request origin not allowed: #{env['HTTP_ORIGIN']}")
+          false
         end
+      end
 
-        def encode(cable_message)
-          @coder.encode cable_message
-        end
+      def respond_to_successful_request
+        logger.info successful_request_message
+        websocket.rack_response
+      end
 
-        def decode(websocket_message)
-          @coder.decode websocket_message
-        end
+      def respond_to_invalid_request
+        close(reason: ActionCable::INTERNAL[:disconnect_reasons][:invalid_request]) if websocket.alive?
 
-        def handle_open
-          @protocol = websocket.protocol
-          connect if respond_to?(:connect)
-          subscribe_to_internal_channel
-          send_welcome_message
+        logger.error invalid_request_message
+        logger.info finished_request_message
+        [404, { 'Content-Type' => 'text/plain' }, ['Page not found']]
+      end
 
-          message_buffer.process!
-          server.add_connection(self)
-        rescue ActionCable::Connection::Authorization::UnauthorizedError
-          close(reason: ActionCable::INTERNAL[:disconnect_reasons][:unauthorized], reconnect: false) if websocket.alive?
-        end
+      # Tags are declared in the server but computed in the connection. This allows us per-connection tailored tags.
+      def new_tagged_logger
+        TaggedLoggerProxy.new server.logger,
+                              tags: server.config.log_tags.map { |tag|
+                                      tag.respond_to?(:call) ? tag.call(request) : tag.to_s.camelize
+                                    }
+      end
 
-        def handle_close
-          logger.info finished_request_message
+      def started_request_message
+        format('Started %s "%s"%s for %s at %s', request.request_method, request.filtered_path,
+               websocket.possible? ? ' [WebSocket]' : '[non-WebSocket]', request.ip, Time.now.to_s)
+      end
 
-          server.remove_connection(self)
+      def finished_request_message
+        format('Finished "%s"%s for %s at %s', request.filtered_path,
+               websocket.possible? ? ' [WebSocket]' : '[non-WebSocket]', request.ip, Time.now.to_s)
+      end
 
-          subscriptions.unsubscribe_from_all
-          unsubscribe_from_internal_channel
+      def invalid_request_message
+        format('Failed to upgrade to WebSocket (REQUEST_METHOD: %s, HTTP_CONNECTION: %s, HTTP_UPGRADE: %s)',
+               env['REQUEST_METHOD'], env['HTTP_CONNECTION'], env['HTTP_UPGRADE'])
+      end
 
-          disconnect if respond_to?(:disconnect)
-        end
-
-        def send_welcome_message
-          # Send welcome message to the internal connection monitor channel.
-          # This ensures the connection monitor state is reset after a successful
-          # websocket connection.
-          transmit type: ActionCable::INTERNAL[:message_types][:welcome]
-        end
-
-        def allow_request_origin?
-          return true if server.config.disable_request_forgery_protection
-
-          proto = Rack::Request.new(env).ssl? ? "https" : "http"
-          if server.config.allow_same_origin_as_host && env["HTTP_ORIGIN"] == "#{proto}://#{env['HTTP_HOST']}"
-            true
-          elsif Array(server.config.allowed_request_origins).any? { |allowed_origin|  allowed_origin === env["HTTP_ORIGIN"] }
-            true
-          else
-            logger.error("Request origin not allowed: #{env['HTTP_ORIGIN']}")
-            false
-          end
-        end
-
-        def respond_to_successful_request
-          logger.info successful_request_message
-          websocket.rack_response
-        end
-
-        def respond_to_invalid_request
-          close(reason: ActionCable::INTERNAL[:disconnect_reasons][:invalid_request]) if websocket.alive?
-
-          logger.error invalid_request_message
-          logger.info finished_request_message
-          [ 404, { "Content-Type" => "text/plain" }, [ "Page not found" ] ]
-        end
-
-        # Tags are declared in the server but computed in the connection. This allows us per-connection tailored tags.
-        def new_tagged_logger
-          TaggedLoggerProxy.new server.logger,
-            tags: server.config.log_tags.map { |tag| tag.respond_to?(:call) ? tag.call(request) : tag.to_s.camelize }
-        end
-
-        def started_request_message
-          'Started %s "%s"%s for %s at %s' % [
-            request.request_method,
-            request.filtered_path,
-            websocket.possible? ? " [WebSocket]" : "[non-WebSocket]",
-            request.ip,
-            Time.now.to_s ]
-        end
-
-        def finished_request_message
-          'Finished "%s"%s for %s at %s' % [
-            request.filtered_path,
-            websocket.possible? ? " [WebSocket]" : "[non-WebSocket]",
-            request.ip,
-            Time.now.to_s ]
-        end
-
-        def invalid_request_message
-          "Failed to upgrade to WebSocket (REQUEST_METHOD: %s, HTTP_CONNECTION: %s, HTTP_UPGRADE: %s)" % [
-            env["REQUEST_METHOD"], env["HTTP_CONNECTION"], env["HTTP_UPGRADE"]
-          ]
-        end
-
-        def successful_request_message
-          "Successfully upgraded to WebSocket (REQUEST_METHOD: %s, HTTP_CONNECTION: %s, HTTP_UPGRADE: %s)" % [
-            env["REQUEST_METHOD"], env["HTTP_CONNECTION"], env["HTTP_UPGRADE"]
-          ]
-        end
+      def successful_request_message
+        format('Successfully upgraded to WebSocket (REQUEST_METHOD: %s, HTTP_CONNECTION: %s, HTTP_UPGRADE: %s)',
+               env['REQUEST_METHOD'], env['HTTP_CONNECTION'], env['HTTP_UPGRADE'])
+      end
     end
   end
 end

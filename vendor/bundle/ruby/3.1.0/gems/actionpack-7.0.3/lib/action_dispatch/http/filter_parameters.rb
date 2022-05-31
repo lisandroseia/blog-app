@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_support/parameter_filter"
+require 'active_support/parameter_filter'
 
 module ActionDispatch
   module Http
@@ -32,15 +32,15 @@ module ActionDispatch
     #   end
     #   => reverses the value to all keys matching /secret/i
     module FilterParameters
-      ENV_MATCH = [/RAW_POST_DATA/, "rack.request.form_vars"] # :nodoc:
+      ENV_MATCH = [/RAW_POST_DATA/, 'rack.request.form_vars'] # :nodoc:
       NULL_PARAM_FILTER = ActiveSupport::ParameterFilter.new # :nodoc:
-      NULL_ENV_FILTER   = ActiveSupport::ParameterFilter.new ENV_MATCH # :nodoc:
+      NULL_ENV_FILTER = ActiveSupport::ParameterFilter.new ENV_MATCH # :nodoc:
 
       def initialize
         super
         @filtered_parameters = nil
-        @filtered_env        = nil
-        @filtered_path       = nil
+        @filtered_env = nil
+        @filtered_path = nil
       end
 
       # Returns a hash of parameters with all sensitive data replaced.
@@ -60,17 +60,18 @@ module ActionDispatch
         @filtered_path ||= query_string.empty? ? path : "#{path}?#{filtered_query_string}"
       end
 
-    private
+      private
+
       def parameter_filter # :doc:
-        parameter_filter_for fetch_header("action_dispatch.parameter_filter") {
+        parameter_filter_for fetch_header('action_dispatch.parameter_filter') {
           return NULL_PARAM_FILTER
         }
       end
 
       def env_filter # :doc:
-        user_key = fetch_header("action_dispatch.parameter_filter") {
+        user_key = fetch_header('action_dispatch.parameter_filter') do
           return NULL_ENV_FILTER
-        }
+        end
         parameter_filter_for(Array(user_key) + ENV_MATCH)
       end
 
@@ -78,11 +79,11 @@ module ActionDispatch
         ActiveSupport::ParameterFilter.new(filters)
       end
 
-      KV_RE   = "[^&;=]+"
-      PAIR_RE = %r{(#{KV_RE})=(#{KV_RE})}
+      KV_RE = '[^&;=]+'
+      PAIR_RE = /(#{KV_RE})=(#{KV_RE})/
       def filtered_query_string # :doc:
         query_string.gsub(PAIR_RE) do |_|
-          parameter_filter.filter($1 => $2).first.join("=")
+          parameter_filter.filter(Regexp.last_match(1) => Regexp.last_match(2)).first.join('=')
         end
       end
     end

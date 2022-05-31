@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/string/output_safety"
+require 'active_support/core_ext/string/output_safety'
 
 module ActionView
   # Used as a buffer for views
@@ -26,16 +26,18 @@ module ActionView
 
     def <<(value)
       return self if value.nil?
+
       super(value.to_s)
     end
-    alias :append= :<<
+    alias append= <<
 
     def safe_expr_append=(val)
       return self if val.nil?
+
       safe_concat val.to_s
     end
 
-    alias :safe_append= :safe_concat
+    alias safe_append= safe_concat
   end
 
   class StreamingBuffer # :nodoc:
@@ -48,13 +50,13 @@ module ActionView
       value = ERB::Util.h(value) unless value.html_safe?
       @block.call(value)
     end
-    alias :concat  :<<
-    alias :append= :<<
+    alias concat <<
+    alias append= <<
 
     def safe_concat(value)
       @block.call(value.to_s)
     end
-    alias :safe_append= :safe_concat
+    alias safe_append= safe_concat
 
     def html_safe?
       true

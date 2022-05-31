@@ -36,7 +36,7 @@ module ActionController # :nodoc:
       #   class PostsController < ApplicationController
       #     content_security_policy false, only: :index
       #   end
-      def content_security_policy(enabled = true, **options, &block)
+      def content_security_policy(enabled = true, **options)
         before_action(options) do
           if block_given?
             policy = current_content_security_policy
@@ -44,9 +44,7 @@ module ActionController # :nodoc:
             request.content_security_policy = policy
           end
 
-          unless enabled
-            request.content_security_policy = nil
-          end
+          request.content_security_policy = nil unless enabled
         end
       end
 
@@ -70,16 +68,17 @@ module ActionController # :nodoc:
     end
 
     private
-      def content_security_policy?
-        request.content_security_policy
-      end
 
-      def content_security_policy_nonce
-        request.content_security_policy_nonce
-      end
+    def content_security_policy?
+      request.content_security_policy
+    end
 
-      def current_content_security_policy
-        request.content_security_policy&.clone || ActionDispatch::ContentSecurityPolicy.new
-      end
+    def content_security_policy_nonce
+      request.content_security_policy_nonce
+    end
+
+    def current_content_security_policy
+      request.content_security_policy&.clone || ActionDispatch::ContentSecurityPolicy.new
+    end
   end
 end

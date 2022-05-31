@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require "active_support/notifications"
+require 'active_support/notifications'
 
 module ActionDispatch
   class ServerTiming
-    SERVER_TIMING_HEADER = "Server-Timing"
+    SERVER_TIMING_HEADER = 'Server-Timing'
 
     def initialize(app)
       @app = app
@@ -25,9 +25,9 @@ module ActionDispatch
       header_info = events.group_by(&:name).map do |event_name, events_collection|
         "#{event_name};dur=#{events_collection.sum(&:duration)}"
       end
-      headers[SERVER_TIMING_HEADER] = header_info.join(", ")
+      headers[SERVER_TIMING_HEADER] = header_info.join(', ')
 
-      [ status, headers, body ]
+      [status, headers, body]
     end
   end
 end

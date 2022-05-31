@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "strscan"
+require 'strscan'
 
 module ActionDispatch
   module Journey # :nodoc:
@@ -14,7 +14,7 @@ module ActionDispatch
       end
 
       class Simulator # :nodoc:
-        INITIAL_STATE = [ [0, nil] ].freeze
+        INITIAL_STATE = [[0, nil]].freeze
 
         attr_reader :tt
 
@@ -27,7 +27,7 @@ module ActionDispatch
           state = INITIAL_STATE
           start_index = 0
 
-          while sym = input.scan(%r([/.?]|[^/.?]+))
+          while sym = input.scan(%r{[/.?]|[^/.?]+})
             end_index = start_index + sym.length
 
             state = tt.move(state, string, start_index, end_index)

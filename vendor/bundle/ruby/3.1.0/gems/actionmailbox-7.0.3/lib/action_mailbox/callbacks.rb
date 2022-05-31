@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-require "active_support/callbacks"
+require 'active_support/callbacks'
 
 module ActionMailbox
   # Defines the callbacks related to processing.
   module Callbacks
-    extend  ActiveSupport::Concern
+    extend ActiveSupport::Concern
     include ActiveSupport::Callbacks
 
-    TERMINATOR = ->(mailbox, chain) do
+    TERMINATOR = lambda do |mailbox, chain|
       chain.call
       mailbox.finished_processing?
     end
@@ -18,16 +18,16 @@ module ActionMailbox
     end
 
     class_methods do
-      def before_processing(*methods, &block)
-        set_callback(:process, :before, *methods, &block)
+      def before_processing(*methods, &)
+        set_callback(:process, :before, *methods, &)
       end
 
-      def after_processing(*methods, &block)
-        set_callback(:process, :after, *methods, &block)
+      def after_processing(*methods, &)
+        set_callback(:process, :after, *methods, &)
       end
 
-      def around_processing(*methods, &block)
-        set_callback(:process, :around, *methods, &block)
+      def around_processing(*methods, &)
+        set_callback(:process, :around, *methods, &)
       end
     end
   end

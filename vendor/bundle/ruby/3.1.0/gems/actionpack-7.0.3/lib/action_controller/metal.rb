@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/array/extract_options"
-require "action_dispatch/middleware/stack"
+require 'active_support/core_ext/array/extract_options'
+require 'action_dispatch/middleware/stack'
 
 module ActionController
   # Extend ActionDispatch middleware stack to make it aware of options
@@ -33,29 +33,30 @@ module ActionController
     end
 
     private
-      INCLUDE = ->(list, action) { list.include? action }
-      EXCLUDE = ->(list, action) { !list.include? action }
-      NULL    = ->(list, action) { true }
 
-      def build_middleware(klass, args, block)
-        options = args.extract_options!
-        only   = Array(options.delete(:only)).map(&:to_s)
-        except = Array(options.delete(:except)).map(&:to_s)
-        args << options unless options.empty?
+    INCLUDE = ->(list, action) { list.include? action }
+    EXCLUDE = ->(list, action) { !list.include? action }
+    NULL = ->(_list, _action) { true }
 
-        strategy = NULL
-        list     = nil
+    def build_middleware(klass, args, block)
+      options = args.extract_options!
+      only = Array(options.delete(:only)).map(&:to_s)
+      except = Array(options.delete(:except)).map(&:to_s)
+      args << options unless options.empty?
 
-        if only.any?
-          strategy = INCLUDE
-          list     = only
-        elsif except.any?
-          strategy = EXCLUDE
-          list     = except
-        end
+      strategy = NULL
+      list = nil
 
-        Middleware.new(klass, args, list, strategy, block)
+      if only.any?
+        strategy = INCLUDE
+        list = only
+      elsif except.any?
+        strategy = EXCLUDE
+        list = except
       end
+
+      Middleware.new(klass, args, list, strategy, block)
+    end
   end
 
   # <tt>ActionController::Metal</tt> is the simplest possible controller, providing a
@@ -124,7 +125,7 @@ module ActionController
     # ==== Returns
     # * <tt>string</tt>
     def self.controller_name
-      @controller_name ||= (name.demodulize.delete_suffix("Controller").underscore unless anonymous?)
+      @controller_name ||= (name.demodulize.delete_suffix('Controller').underscore unless anonymous?)
     end
 
     def self.make_response!(request)
@@ -133,7 +134,7 @@ module ActionController
       end
     end
 
-    def self.action_encoding_template(action) # :nodoc:
+    def self.action_encoding_template(_action) # :nodoc:
       false
     end
 
@@ -143,9 +144,9 @@ module ActionController
     end
 
     attr_internal :response, :request
-    delegate :session, to: "@_request"
+    delegate :session, to: '@_request'
     delegate :headers, :status=, :location=, :content_type=,
-             :status, :location, :content_type, :media_type, to: "@_response"
+             :status, :location, :content_type, :media_type, to: '@_response'
 
     def initialize
       @_request = nil
@@ -162,7 +163,7 @@ module ActionController
       @_params = val
     end
 
-    alias :response_code :status # :nodoc:
+    alias response_code status # :nodoc:
 
     # Basic url_for that can be overridden for more robust functionality.
     def url_for(string)
@@ -173,6 +174,7 @@ module ActionController
       body = [body] unless body.nil? || body.respond_to?(:each)
       response.reset_body!
       return unless body
+
       response.body = body
       super
     end
@@ -246,7 +248,7 @@ module ActionController
     # executes the action named +name+.
     def self.dispatch(name, req, res)
       if middleware_stack.any?
-        middleware_stack.build(name) { |env| new.dispatch(name, req, res) }.call req.env
+        middleware_stack.build(name) { |_env| new.dispatch(name, req, res) }.call req.env
       else
         new.dispatch(name, req, res)
       end

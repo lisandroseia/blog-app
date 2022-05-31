@@ -4,11 +4,11 @@ module ActionText
   module Attachable
     extend ActiveSupport::Concern
 
-    LOCATOR_NAME = "attachable"
+    LOCATOR_NAME = 'attachable'
 
     class << self
       def from_node(node)
-        if attachable = attachable_from_sgid(node["sgid"])
+        if attachable = attachable_from_sgid(node['sgid'])
           attachable
         elsif attachable = ActionText::Attachables::ContentAttachment.from_node(node)
           attachable
@@ -26,11 +26,12 @@ module ActionText
       end
 
       private
-        def attachable_from_sgid(sgid)
-          from_attachable_sgid(sgid)
-        rescue ActiveRecord::RecordNotFound
-          nil
-        end
+
+      def attachable_from_sgid(sgid)
+        from_attachable_sgid(sgid)
+      rescue ActiveRecord::RecordNotFound
+        nil
+      end
     end
 
     class_methods do
@@ -44,7 +45,7 @@ module ActionText
     end
 
     def attachable_content_type
-      try(:content_type) || "application/octet-stream"
+      try(:content_type) || 'application/octet-stream'
     end
 
     def attachable_filename
@@ -64,7 +65,7 @@ module ActionText
     end
 
     def as_json(*)
-      super.merge(attachable_sgid: attachable_sgid)
+      super.merge(attachable_sgid:)
     end
 
     def to_trix_content_attachment_partial_path

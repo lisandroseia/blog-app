@@ -1,29 +1,29 @@
 # frozen_string_literal: true
 
-require "active_support/benchmarkable"
-require "action_view/helpers/capture_helper"
-require "action_view/helpers/output_safety_helper"
-require "action_view/helpers/tag_helper"
-require "action_view/helpers/url_helper"
-require "action_view/helpers/sanitize_helper"
-require "action_view/helpers/text_helper"
-require "action_view/helpers/active_model_helper"
-require "action_view/helpers/asset_tag_helper"
-require "action_view/helpers/asset_url_helper"
-require "action_view/helpers/atom_feed_helper"
-require "action_view/helpers/cache_helper"
-require "action_view/helpers/controller_helper"
-require "action_view/helpers/csp_helper"
-require "action_view/helpers/csrf_helper"
-require "action_view/helpers/date_helper"
-require "action_view/helpers/debug_helper"
-require "action_view/helpers/form_tag_helper"
-require "action_view/helpers/form_helper"
-require "action_view/helpers/form_options_helper"
-require "action_view/helpers/javascript_helper"
-require "action_view/helpers/number_helper"
-require "action_view/helpers/rendering_helper"
-require "action_view/helpers/translation_helper"
+require 'active_support/benchmarkable'
+require 'action_view/helpers/capture_helper'
+require 'action_view/helpers/output_safety_helper'
+require 'action_view/helpers/tag_helper'
+require 'action_view/helpers/url_helper'
+require 'action_view/helpers/sanitize_helper'
+require 'action_view/helpers/text_helper'
+require 'action_view/helpers/active_model_helper'
+require 'action_view/helpers/asset_tag_helper'
+require 'action_view/helpers/asset_url_helper'
+require 'action_view/helpers/atom_feed_helper'
+require 'action_view/helpers/cache_helper'
+require 'action_view/helpers/controller_helper'
+require 'action_view/helpers/csp_helper'
+require 'action_view/helpers/csrf_helper'
+require 'action_view/helpers/date_helper'
+require 'action_view/helpers/debug_helper'
+require 'action_view/helpers/form_tag_helper'
+require 'action_view/helpers/form_helper'
+require 'action_view/helpers/form_options_helper'
+require 'action_view/helpers/javascript_helper'
+require 'action_view/helpers/number_helper'
+require 'action_view/helpers/rendering_helper'
+require 'action_view/helpers/translation_helper'
 
 module ActionView # :nodoc:
   module Helpers # :nodoc:

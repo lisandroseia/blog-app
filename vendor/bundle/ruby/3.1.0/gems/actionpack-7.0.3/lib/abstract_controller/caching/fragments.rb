@@ -27,9 +27,7 @@ module AbstractController
 
         self.fragment_cache_keys = []
 
-        if respond_to?(:helper_method)
-          helper_method :combined_fragment_cache_key
-        end
+        helper_method :combined_fragment_cache_key if respond_to?(:helper_method)
       end
 
       module ClassMethods
@@ -67,9 +65,9 @@ module AbstractController
       # with the specified +key+ value.
       def combined_fragment_cache_key(key)
         head = self.class.fragment_cache_keys.map { |k| instance_exec(&k) }
-        tail = key.is_a?(Hash) ? url_for(key).split("://").last : key
+        tail = key.is_a?(Hash) ? url_for(key).split('://').last : key
 
-        cache_key = [:views, ENV["RAILS_CACHE_ID"] || ENV["RAILS_APP_VERSION"], head, tail]
+        cache_key = [:views, ENV.fetch('RAILS_CACHE_ID') { ENV.fetch('RAILS_APP_VERSION', nil) }, head, tail]
         cache_key.flatten!(1)
         cache_key.compact!
         cache_key
@@ -104,6 +102,7 @@ module AbstractController
       # +key+ exists (see +expire_fragment+ for acceptable formats).
       def fragment_exist?(key, options = nil)
         return unless cache_configured?
+
         key = combined_fragment_cache_key(key)
 
         instrument_fragment_cache :exist_fragment?, key do
@@ -131,6 +130,7 @@ module AbstractController
       # method (or <tt>delete_matched</tt>, for Regexp keys).
       def expire_fragment(key, options = nil)
         return unless cache_configured?
+
         key = combined_fragment_cache_key(key) unless key.is_a?(Regexp)
 
         instrument_fragment_cache :expire_fragment, key do
@@ -142,8 +142,8 @@ module AbstractController
         end
       end
 
-      def instrument_fragment_cache(name, key, &block) # :nodoc:
-        ActiveSupport::Notifications.instrument("#{name}.#{instrument_name}", instrument_payload(key), &block)
+      def instrument_fragment_cache(name, key, &) # :nodoc:
+        ActiveSupport::Notifications.instrument("#{name}.#{instrument_name}", instrument_payload(key), &)
       end
     end
   end

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/module/introspection"
+require 'active_support/core_ext/module/introspection'
 
 module AbstractController
   module Railties

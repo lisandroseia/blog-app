@@ -26,7 +26,7 @@ module ActionDispatch
 
       def initialize(hash) # :nodoc:
         @tempfile = hash[:tempfile]
-        raise(ArgumentError, ":tempfile is required") unless @tempfile
+        raise(ArgumentError, ':tempfile is required') unless @tempfile
 
         if hash[:filename]
           @original_filename = hash[:filename].dup
@@ -40,8 +40,8 @@ module ActionDispatch
           @original_filename = nil
         end
 
-        @content_type      = hash[:type]
-        @headers           = hash[:head]
+        @content_type = hash[:type]
+        @headers = hash[:head]
       end
 
       # Shortcut for +tempfile.read+.

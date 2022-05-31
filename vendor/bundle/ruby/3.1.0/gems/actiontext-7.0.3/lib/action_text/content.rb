@@ -2,7 +2,8 @@
 
 module ActionText
   class Content
-    include Rendering, Serialization
+    include Serialization
+    include Rendering
 
     attr_reader :fragment
 
@@ -11,23 +12,22 @@ module ActionText
     class << self
       def fragment_by_canonicalizing_content(content)
         fragment = ActionText::Attachment.fragment_by_canonicalizing_attachments(content)
-        fragment = ActionText::AttachmentGallery.fragment_by_canonicalizing_attachment_galleries(fragment)
-        fragment
+        ActionText::AttachmentGallery.fragment_by_canonicalizing_attachment_galleries(fragment)
       end
     end
 
     def initialize(content = nil, options = {})
       options.with_defaults! canonicalize: true
 
-      if options[:canonicalize]
-        @fragment = self.class.fragment_by_canonicalizing_content(content)
-      else
-        @fragment = ActionText::Fragment.wrap(content)
-      end
+      @fragment = if options[:canonicalize]
+                    self.class.fragment_by_canonicalizing_content(content)
+                  else
+                    ActionText::Fragment.wrap(content)
+                  end
     end
 
     def links
-      @links ||= fragment.find_all("a[href]").map { |a| a["href"] }.uniq
+      @links ||= fragment.find_all('a[href]').map { |a| a['href'] }.uniq
     end
 
     def attachments
@@ -54,7 +54,7 @@ module ActionText
 
     def append_attachables(attachables)
       attachments = ActionText::Attachment.from_attachables(attachables)
-      self.class.new([self.to_s.presence, *attachments].compact.join("\n"))
+      self.class.new([to_s.presence, *attachments].compact.join("\n"))
     end
 
     def render_attachments(**options, &block)
@@ -84,11 +84,11 @@ module ActionText
     end
 
     def to_rendered_html_with_layout
-      render layout: "action_text/contents/content", partial: to_partial_path, formats: :html, locals: { content: self }
+      render layout: 'action_text/contents/content', partial: to_partial_path, formats: :html, locals: { content: self }
     end
 
     def to_partial_path
-      "action_text/contents/content"
+      'action_text/contents/content'
     end
 
     def to_s
@@ -104,28 +104,27 @@ module ActionText
     end
 
     def ==(other)
-      if other.is_a?(self.class)
-        to_s == other.to_s
-      end
+      to_s == other.to_s if other.is_a?(self.class)
     end
 
     private
-      def attachment_nodes
-        @attachment_nodes ||= fragment.find_all(ActionText::Attachment.tag_name)
-      end
 
-      def attachment_gallery_nodes
-        @attachment_gallery_nodes ||= ActionText::AttachmentGallery.find_attachment_gallery_nodes(fragment)
-      end
+    def attachment_nodes
+      @attachment_nodes ||= fragment.find_all(ActionText::Attachment.tag_name)
+    end
 
-      def attachment_for_node(node, with_full_attributes: true)
-        attachment = ActionText::Attachment.from_node(node)
-        with_full_attributes ? attachment.with_full_attributes : attachment
-      end
+    def attachment_gallery_nodes
+      @attachment_gallery_nodes ||= ActionText::AttachmentGallery.find_attachment_gallery_nodes(fragment)
+    end
 
-      def attachment_gallery_for_node(node)
-        ActionText::AttachmentGallery.from_node(node)
-      end
+    def attachment_for_node(node, with_full_attributes: true)
+      attachment = ActionText::Attachment.from_node(node)
+      with_full_attributes ? attachment.with_full_attributes : attachment
+    end
+
+    def attachment_gallery_for_node(node)
+      ActionText::AttachmentGallery.from_node(node)
+    end
   end
 end
 

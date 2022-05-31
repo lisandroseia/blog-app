@@ -50,7 +50,7 @@ module ActionDispatch
     # :stopdoc:
 
     # Default to 2 years as recommended on hstspreload.org.
-    HSTS_EXPIRES_IN = 63072000
+    HSTS_EXPIRES_IN = 63_072_000
 
     PERMANENT_REDIRECT_REQUEST_METHODS = %w[GET HEAD] # :nodoc:
 
@@ -63,7 +63,7 @@ module ActionDispatch
 
       @redirect = redirect
 
-      @exclude = @redirect && @redirect[:exclude] || proc { !@redirect }
+      @exclude = (@redirect && @redirect[:exclude]) || proc { !@redirect }
       @secure_cookies = secure_cookies
 
       @hsts_header = build_hsts_header(normalize_hsts_options(hsts))
@@ -74,82 +74,84 @@ module ActionDispatch
       request = Request.new env
 
       if request.ssl?
-        @app.call(env).tap do |status, headers, body|
+        @app.call(env).tap do |_status, headers, _body|
           set_hsts_header! headers
           flag_cookies_as_secure! headers if @secure_cookies && !@exclude.call(request)
         end
       else
         return redirect_to_https request unless @exclude.call(request)
+
         @app.call(env)
       end
     end
 
     private
-      def set_hsts_header!(headers)
-        headers["Strict-Transport-Security"] ||= @hsts_header
+
+    def set_hsts_header!(headers)
+      headers['Strict-Transport-Security'] ||= @hsts_header
+    end
+
+    def normalize_hsts_options(options)
+      case options
+      # Explicitly disabling HSTS clears the existing setting from browsers
+      # by setting expiry to 0.
+      when false
+        self.class.default_hsts_options.merge(expires: 0)
+      # Default to enabled, with default options.
+      when nil, true
+        self.class.default_hsts_options
+      else
+        self.class.default_hsts_options.merge(options)
       end
+    end
 
-      def normalize_hsts_options(options)
-        case options
-        # Explicitly disabling HSTS clears the existing setting from browsers
-        # by setting expiry to 0.
-        when false
-          self.class.default_hsts_options.merge(expires: 0)
-        # Default to enabled, with default options.
-        when nil, true
-          self.class.default_hsts_options
-        else
-          self.class.default_hsts_options.merge(options)
-        end
+    # https://tools.ietf.org/html/rfc6797#section-6.1
+    def build_hsts_header(hsts)
+      value = +"max-age=#{hsts[:expires].to_i}"
+      value << '; includeSubDomains' if hsts[:subdomains]
+      value << '; preload' if hsts[:preload]
+      value
+    end
+
+    def flag_cookies_as_secure!(headers)
+      if cookies = headers['Set-Cookie']
+        cookies = cookies.split("\n")
+
+        headers['Set-Cookie'] = cookies.map do |cookie|
+          if /;\s*secure\s*(;|$)/i.match?(cookie)
+            cookie
+          else
+            "#{cookie}; secure"
+          end
+        end.join("\n")
       end
+    end
 
-      # https://tools.ietf.org/html/rfc6797#section-6.1
-      def build_hsts_header(hsts)
-        value = +"max-age=#{hsts[:expires].to_i}"
-        value << "; includeSubDomains" if hsts[:subdomains]
-        value << "; preload" if hsts[:preload]
-        value
+    def redirect_to_https(request)
+      [@redirect.fetch(:status, redirection_status(request)),
+       { 'Content-Type' => 'text/html',
+         'Location' => https_location_for(request) },
+       (@redirect[:body] || [])]
+    end
+
+    def redirection_status(request)
+      if PERMANENT_REDIRECT_REQUEST_METHODS.include?(request.raw_request_method)
+        301 # Issue a permanent redirect via a GET request.
+      elsif @ssl_default_redirect_status
+        @ssl_default_redirect_status
+      else
+        307 # Issue a fresh request redirect to preserve the HTTP method.
       end
+    end
 
-      def flag_cookies_as_secure!(headers)
-        if cookies = headers["Set-Cookie"]
-          cookies = cookies.split("\n")
+    def https_location_for(request)
+      host = @redirect[:host] || request.host
+      port = @redirect[:port] || request.port
 
-          headers["Set-Cookie"] = cookies.map { |cookie|
-            if !/;\s*secure\s*(;|$)/i.match?(cookie)
-              "#{cookie}; secure"
-            else
-              cookie
-            end
-          }.join("\n")
-        end
-      end
-
-      def redirect_to_https(request)
-        [ @redirect.fetch(:status, redirection_status(request)),
-          { "Content-Type" => "text/html",
-            "Location" => https_location_for(request) },
-          (@redirect[:body] || []) ]
-      end
-
-      def redirection_status(request)
-        if PERMANENT_REDIRECT_REQUEST_METHODS.include?(request.raw_request_method)
-          301 # Issue a permanent redirect via a GET request.
-        elsif @ssl_default_redirect_status
-          @ssl_default_redirect_status
-        else
-          307 # Issue a fresh request redirect to preserve the HTTP method.
-        end
-      end
-
-      def https_location_for(request)
-        host = @redirect[:host] || request.host
-        port = @redirect[:port] || request.port
-
-        location = +"https://#{host}"
-        location << ":#{port}" if port != 80 && port != 443
-        location << request.fullpath
-        location
-      end
+      location = +"https://#{host}"
+      location << ":#{port}" if port != 80 && port != 443
+      location << request.fullpath
+      location
+    end
   end
 end

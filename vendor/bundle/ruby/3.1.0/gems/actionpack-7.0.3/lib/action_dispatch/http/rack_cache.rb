@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-require "rack/cache"
-require "rack/cache/context"
-require "active_support/cache"
+require 'rack/cache'
+require 'rack/cache/context'
+require 'active_support/cache'
 
 module ActionDispatch
   class RailsMetaStore < Rack::Cache::MetaStore
-    def self.resolve(uri)
+    def self.resolve(_uri)
       new
     end
 
@@ -30,7 +30,7 @@ module ActionDispatch
   end
 
   class RailsEntityStore < Rack::Cache::EntityStore
-    def self.resolve(uri)
+    def self.resolve(_uri)
       new
     end
 

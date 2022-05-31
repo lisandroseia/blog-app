@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "active_support/concern"
-require "active_support/core_ext/module/attribute_accessors_per_thread"
+require 'active_support/concern'
+require 'active_support/core_ext/module/attribute_accessors_per_thread'
 
 module ActionText
   module Rendering # :nodoc:
@@ -22,8 +22,8 @@ module ActionText
         self.renderer = previous_renderer
       end
 
-      def render(*args, &block)
-        (renderer || default_renderer).render_to_string(*args, &block)
+      def render(*args, &)
+        (renderer || default_renderer).render_to_string(*args, &)
       end
     end
   end

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "delegate"
+require 'delegate'
 
 module ActionMailer
   # The <tt>ActionMailer::MessageDelivery</tt> class is used by
@@ -16,7 +16,9 @@ module ActionMailer
   #   Notifier.welcome(User.first).message       # a Mail::Message object
   class MessageDelivery < Delegator
     def initialize(mailer_class, action, *args) # :nodoc:
-      @mailer_class, @action, @args = mailer_class, action, args
+      @mailer_class = mailer_class
+      @action = action
+      @args = args
 
       # The mail is only processed if we try to call any methods on it.
       # Typical usage will leave it unloaded and call deliver_later.
@@ -121,28 +123,30 @@ module ActionMailer
     end
 
     private
-      # Returns the processed Mailer instance. We keep this instance
-      # on hand so we can delegate exception handling to it.
-      def processed_mailer
-        @processed_mailer ||= @mailer_class.new.tap do |mailer|
-          mailer.process @action, *@args
-        end
-      end
 
-      def enqueue_delivery(delivery_method, options = {})
-        if processed?
-          ::Kernel.raise "You've accessed the message before asking to " \
-            "deliver it later, so you may have made local changes that would " \
-            "be silently lost if we enqueued a job to deliver it. Why? Only " \
-            "the mailer method *arguments* are passed with the delivery job! " \
-            "Do not access the message in any way if you mean to deliver it " \
-            "later. Workarounds: 1. don't touch the message before calling " \
-            "#deliver_later, 2. only touch the message *within your mailer " \
-            "method*, or 3. use a custom Active Job instead of #deliver_later."
-        else
-          @mailer_class.delivery_job.set(options).perform_later(
-            @mailer_class.name, @action.to_s, delivery_method.to_s, args: @args)
-        end
+    # Returns the processed Mailer instance. We keep this instance
+    # on hand so we can delegate exception handling to it.
+    def processed_mailer
+      @processed_mailer ||= @mailer_class.new.tap do |mailer|
+        mailer.process @action, *@args
       end
+    end
+
+    def enqueue_delivery(delivery_method, options = {})
+      if processed?
+        ::Kernel.raise "You've accessed the message before asking to " \
+                       'deliver it later, so you may have made local changes that would ' \
+                       'be silently lost if we enqueued a job to deliver it. Why? Only ' \
+                       'the mailer method *arguments* are passed with the delivery job! ' \
+                       'Do not access the message in any way if you mean to deliver it ' \
+                       "later. Workarounds: 1. don't touch the message before calling " \
+                       '#deliver_later, 2. only touch the message *within your mailer ' \
+                       'method*, or 3. use a custom Active Job instead of #deliver_later.'
+      else
+        @mailer_class.delivery_job.set(options).perform_later(
+          @mailer_class.name, @action.to_s, delivery_method.to_s, args: @args
+        )
+      end
+    end
   end
 end

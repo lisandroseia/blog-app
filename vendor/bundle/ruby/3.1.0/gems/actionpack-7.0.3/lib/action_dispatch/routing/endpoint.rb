@@ -3,11 +3,11 @@
 module ActionDispatch
   module Routing
     class Endpoint # :nodoc:
-      def dispatcher?;   false; end
-      def redirect?;     false; end
-      def matches?(req);  true; end
-      def app;            self; end
-      def rack_app;        app; end
+      def dispatcher?() = false
+      def redirect?() = false
+      def matches?(_req) = true
+      def app() = self
+      def rack_app() = app
 
       def engine?
         rack_app.is_a?(Class) && rack_app < Rails::Engine

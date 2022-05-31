@@ -46,96 +46,97 @@ module ActionDispatch
         end
 
         private
-          attr_accessor :_screenshot_counter
 
-          def save_html?
-            ENV["RAILS_SYSTEM_TESTING_SCREENSHOT_HTML"] == "1"
+        attr_accessor :_screenshot_counter
+
+        def save_html?
+          ENV['RAILS_SYSTEM_TESTING_SCREENSHOT_HTML'] == '1'
+        end
+
+        def increment_unique
+          @_screenshot_counter ||= 0
+          @_screenshot_counter += 1
+        end
+
+        def unique
+          failed? ? 'failures' : (_screenshot_counter || 0).to_s
+        end
+
+        def image_name
+          sanitized_method_name = method_name.tr('/\\', '--')
+          name = "#{unique}_#{sanitized_method_name}"
+          name[0...225]
+        end
+
+        def image_path
+          absolute_image_path.to_s
+        end
+
+        def html_path
+          absolute_html_path.to_s
+        end
+
+        def absolute_path
+          Rails.root.join(screenshots_dir, image_name)
+        end
+
+        def screenshots_dir
+          Capybara.save_path.presence || 'tmp/screenshots'
+        end
+
+        def absolute_image_path
+          "#{absolute_path}.png"
+        end
+
+        def absolute_html_path
+          "#{absolute_path}.html"
+        end
+
+        def save_html
+          page.save_page(absolute_html_path)
+        end
+
+        def save_image
+          page.save_screenshot(absolute_image_path)
+        end
+
+        def output_type
+          # Environment variables have priority
+          output_type = ENV.fetch('RAILS_SYSTEM_TESTING_SCREENSHOT') { ENV.fetch('CAPYBARA_INLINE_SCREENSHOT', nil) }
+
+          # Default to outputting a path to the screenshot
+          output_type ||= 'simple'
+
+          output_type
+        end
+
+        def display_image
+          message = +"[Screenshot Image]: #{image_path}\n"
+          message << +"[Screenshot HTML]: #{html_path}\n" if save_html?
+
+          case output_type
+          when 'artifact'
+            message << "\e]1338;url=artifact://#{absolute_image_path}\a\n"
+          when 'inline'
+            name = inline_base64(File.basename(absolute_image_path))
+            image = inline_base64(File.read(absolute_image_path))
+            message << "\e]1337;File=name=#{name};height=400px;inline=1:#{image}\a\n"
           end
 
-          def increment_unique
-            @_screenshot_counter ||= 0
-            @_screenshot_counter += 1
-          end
+          message
+        end
 
-          def unique
-            failed? ? "failures" : (_screenshot_counter || 0).to_s
-          end
+        def inline_base64(path)
+          Base64.strict_encode64(path)
+        end
 
-          def image_name
-            sanitized_method_name = method_name.tr("/\\", "--")
-            name = "#{unique}_#{sanitized_method_name}"
-            name[0...225]
-          end
+        def failed?
+          !passed? && !skipped?
+        end
 
-          def image_path
-            absolute_image_path.to_s
-          end
-
-          def html_path
-            absolute_html_path.to_s
-          end
-
-          def absolute_path
-            Rails.root.join(screenshots_dir, image_name)
-          end
-
-          def screenshots_dir
-            Capybara.save_path.presence || "tmp/screenshots"
-          end
-
-          def absolute_image_path
-            "#{absolute_path}.png"
-          end
-
-          def absolute_html_path
-            "#{absolute_path}.html"
-          end
-
-          def save_html
-            page.save_page(absolute_html_path)
-          end
-
-          def save_image
-            page.save_screenshot(absolute_image_path)
-          end
-
-          def output_type
-            # Environment variables have priority
-            output_type = ENV["RAILS_SYSTEM_TESTING_SCREENSHOT"] || ENV["CAPYBARA_INLINE_SCREENSHOT"]
-
-            # Default to outputting a path to the screenshot
-            output_type ||= "simple"
-
-            output_type
-          end
-
-          def display_image
-            message = +"[Screenshot Image]: #{image_path}\n"
-            message << +"[Screenshot HTML]: #{html_path}\n" if save_html?
-
-            case output_type
-            when "artifact"
-              message << "\e]1338;url=artifact://#{absolute_image_path}\a\n"
-            when "inline"
-              name = inline_base64(File.basename(absolute_image_path))
-              image = inline_base64(File.read(absolute_image_path))
-              message << "\e]1337;File=name=#{name};height=400px;inline=1:#{image}\a\n"
-            end
-
-            message
-          end
-
-          def inline_base64(path)
-            Base64.strict_encode64(path)
-          end
-
-          def failed?
-            !passed? && !skipped?
-          end
-
-          def supports_screenshot?
-            Capybara.current_driver != :rack_test
-          end
+        def supports_screenshot?
+          Capybara.current_driver != :rack_test
+        end
       end
     end
   end

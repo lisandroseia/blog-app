@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "active_support/inflector/methods"
-require "active_support/dependencies"
+require 'active_support/inflector/methods'
+require 'active_support/dependencies'
 
 module ActionDispatch
   class MiddlewareStack
@@ -10,18 +10,18 @@ module ActionDispatch
 
       def initialize(klass, args, block)
         @klass = klass
-        @args  = args
+        @args = args
         @block = block
       end
 
-      def name; klass.name; end
+      def name() = klass.name
 
-      def ==(middleware)
-        case middleware
+      def ==(other)
+        case other
         when Middleware
-          klass == middleware.klass
+          klass == other.klass
         when Class
-          klass == middleware
+          klass == other
         end
       end
 
@@ -46,13 +46,13 @@ module ActionDispatch
     # It proxies the +call+ method transparently and instruments the method
     # call.
     class InstrumentationProxy
-      EVENT_NAME = "process_middleware.action_dispatch"
+      EVENT_NAME = 'process_middleware.action_dispatch'
 
       def initialize(middleware, class_name)
         @middleware = middleware
 
         @payload = {
-          middleware: class_name,
+          middleware: class_name
         }
       end
 
@@ -67,13 +67,13 @@ module ActionDispatch
 
     attr_accessor :middlewares
 
-    def initialize(*args)
+    def initialize(*_args)
       @middlewares = []
       yield(self) if block_given?
     end
 
-    def each(&block)
-      @middlewares.each(&block)
+    def each(&)
+      @middlewares.each(&)
     end
 
     def size
@@ -103,17 +103,17 @@ module ActionDispatch
     end
     ruby2_keywords(:insert)
 
-    alias_method :insert_before, :insert
+    alias insert_before insert
 
-    def insert_after(index, *args, &block)
+    def insert_after(index, *args, &)
       index = assert_index(index, :after)
-      insert(index + 1, *args, &block)
+      insert(index + 1, *args, &)
     end
     ruby2_keywords(:insert_after)
 
-    def swap(target, *args, &block)
+    def swap(target, *args, &)
       index = assert_index(target, :before)
-      insert(index, *args, &block)
+      insert(index, *args, &)
       middlewares.delete_at(index + 1)
     end
     ruby2_keywords(:swap)
@@ -142,7 +142,7 @@ module ActionDispatch
       middlewares.insert(target_index, source_middleware)
     end
 
-    alias_method :move_before, :move
+    alias move_before move
 
     def move_after(target, source)
       source_index = assert_index(source, :after)
@@ -169,20 +169,22 @@ module ActionDispatch
     end
 
     private
-      def assert_index(index, where)
-        i = index.is_a?(Integer) ? index : index_of(index)
-        raise "No such middleware to insert #{where}: #{index.inspect}" unless i
-        i
-      end
 
-      def build_middleware(klass, args, block)
-        Middleware.new(klass, args, block)
-      end
+    def assert_index(index, where)
+      i = index.is_a?(Integer) ? index : index_of(index)
+      raise "No such middleware to insert #{where}: #{index.inspect}" unless i
 
-      def index_of(klass)
-        middlewares.index do |m|
-          m.name == klass.name
-        end
+      i
+    end
+
+    def build_middleware(klass, args, block)
+      Middleware.new(klass, args, block)
+    end
+
+    def index_of(klass)
+      middlewares.index do |m|
+        m.name == klass.name
       end
+    end
   end
 end

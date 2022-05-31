@@ -23,7 +23,7 @@ module ActionController # :nodoc:
       #     end
       #   end
       #
-      def permissions_policy(**options, &block)
+      def permissions_policy(**options)
         before_action(options) do
           if block_given?
             policy = request.permissions_policy.clone

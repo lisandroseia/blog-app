@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/module/attr_internal"
-require "active_support/core_ext/module/attribute_accessors"
-require "active_support/ordered_options"
-require "action_view/log_subscriber"
-require "action_view/helpers"
-require "action_view/context"
-require "action_view/template"
-require "action_view/lookup_context"
+require 'active_support/core_ext/module/attr_internal'
+require 'active_support/core_ext/module/attribute_accessors'
+require 'active_support/ordered_options'
+require 'action_view/log_subscriber'
+require 'action_view/helpers'
+require 'action_view/context'
+require 'action_view/template'
+require 'action_view/lookup_context'
 
 module ActionView # :nodoc:
   # = Action View Base
@@ -139,14 +139,19 @@ module ActionView # :nodoc:
   # For more information on Builder please consult the {source
   # code}[https://github.com/jimweirich/builder].
   class Base
-    include Helpers, ::ERB::Util, Context
+    include Context
+    include ::ERB::Util
+    include Helpers
 
     # Specify the proc used to decorate input tags that refer to attributes with errors.
-    cattr_accessor :field_error_proc, default: Proc.new { |html_tag, instance| content_tag :div, html_tag, class: "field_with_errors" }
+    cattr_accessor :field_error_proc, default: proc { |html_tag, _instance|
+                                                 content_tag :div, html_tag, class: 'field_with_errors'
+                                               }
 
     # How to complete the streaming when an exception occurs.
     # This is our best guess: first try to close the attribute, then the tag.
-    cattr_accessor :streaming_completion_on_exception, default: %("><script>window.location = "/500.html"</script></html>)
+    cattr_accessor :streaming_completion_on_exception,
+                   default: %("><script>window.location = "/500.html"</script></html>)
 
     # Specify whether rendering within namespaced controllers should prefix
     # the partial paths for ActiveModel objects with the namespace.
@@ -166,7 +171,7 @@ module ActionView # :nodoc:
     class_attribute :logger
 
     class << self
-      delegate :erb_trim_mode=, to: "ActionView::Template::Handlers::ERB"
+      delegate :erb_trim_mode=, to: 'ActionView::Template::Handlers::ERB'
 
       def cache_template_loading
         ActionView::Resolver.caching?
@@ -181,17 +186,17 @@ module ActionView # :nodoc:
       end
 
       def with_empty_template_cache # :nodoc:
-        subclass = Class.new(self) {
+        subclass = Class.new(self) do
           # We can't implement these as self.class because subclasses will
           # share the same template cache as superclasses, so "changed?" won't work
           # correctly.
-          define_method(:compiled_method_container)           { subclass }
+          define_method(:compiled_method_container) { subclass }
           define_singleton_method(:compiled_method_container) { subclass }
 
           def inspect
-            "#<ActionView::Base:#{'%#016x' % (object_id << 1)}>"
+            "#<ActionView::Base:#{format('%#016x', (object_id << 1))}>"
           end
-        }
+        end
       end
 
       def changed?(other) # :nodoc:
@@ -200,6 +205,7 @@ module ActionView # :nodoc:
     end
 
     attr_reader :view_renderer, :lookup_context
+
     attr_internal :config, :assigns
 
     delegate :formats, :formats=, :locale, :locale=, :view_paths, :view_paths=, to: :lookup_context
@@ -238,31 +244,33 @@ module ActionView # :nodoc:
     end
 
     def _run(method, template, locals, buffer, add_to_stack: true, &block)
-      _old_output_buffer, _old_virtual_path, _old_template = @output_buffer, @virtual_path, @current_template
+      _old_output_buffer = @output_buffer
+      _old_virtual_path = @virtual_path
+      _old_template = @current_template
       @current_template = template if add_to_stack
       @output_buffer = buffer
       public_send(method, locals, buffer, &block)
     ensure
-      @output_buffer, @virtual_path, @current_template = _old_output_buffer, _old_virtual_path, _old_template
+      @output_buffer = _old_output_buffer
+      @virtual_path = _old_virtual_path
+      @current_template = _old_template
     end
 
     def compiled_method_container
-      raise NotImplementedError, <<~msg.squish
+      raise NotImplementedError, <<~MSG.squish
         Subclasses of ActionView::Base must implement `compiled_method_container`
         or use the class method `with_empty_template_cache` for constructing
         an ActionView::Base subclass that has an empty cache.
-      msg
+      MSG
     end
 
     def in_rendering_context(options)
-      old_view_renderer  = @view_renderer
+      old_view_renderer = @view_renderer
       old_lookup_context = @lookup_context
 
       if !lookup_context.html_fallback_for_js && options[:formats]
         formats = Array(options[:formats])
-        if formats == [:js]
-          formats << :html
-        end
+        formats << :html if formats == [:js]
         @lookup_context = lookup_context.with_prepended_formats(formats)
         @view_renderer = ActionView::Renderer.new @lookup_context
       end

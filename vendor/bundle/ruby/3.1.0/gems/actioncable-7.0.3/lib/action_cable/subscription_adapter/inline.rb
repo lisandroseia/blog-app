@@ -25,13 +25,14 @@ module ActionCable
       end
 
       private
-        def subscriber_map
-          @subscriber_map || @server.mutex.synchronize { @subscriber_map ||= new_subscriber_map }
-        end
 
-        def new_subscriber_map
-          SubscriberMap.new
-        end
+      def subscriber_map
+        @subscriber_map || @server.mutex.synchronize { @subscriber_map ||= new_subscriber_map }
+      end
+
+      def new_subscriber_map
+        SubscriberMap.new
+      end
     end
   end
 end

@@ -2,16 +2,16 @@
 
 module ActionController
   class LogSubscriber < ActiveSupport::LogSubscriber
-    INTERNAL_PARAMS = %w(controller action format _method only_path)
+    INTERNAL_PARAMS = %w[controller action format _method only_path]
 
     def start_processing(event)
       return unless logger.info?
 
       payload = event.payload
-      params  = payload[:params].except(*INTERNAL_PARAMS)
-      format  = payload[:format]
-      format  = format.to_s.upcase if format.is_a?(Symbol)
-      format  = "*/*" if format.nil?
+      params = payload[:params].except(*INTERNAL_PARAMS)
+      format = payload[:format]
+      format = format.to_s.upcase if format.is_a?(Symbol)
+      format = '*/*' if format.nil?
 
       info "Processing by #{payload[:controller]}##{payload[:action]} as #{format}"
       info "  Parameters: #{params.inspect}" unless params.empty?
@@ -30,7 +30,7 @@ module ActionController
         additions << "Allocations: #{event.allocations}"
 
         message = +"Completed #{status} #{Rack::Utils::HTTP_STATUS_CODES[status]} in #{event.duration.round}ms"
-        message << " (#{additions.join(" | ")})"
+        message << " (#{additions.join(' | ')})"
         message << "\n\n" if defined?(Rails.env) && Rails.env.development?
 
         message
@@ -56,13 +56,17 @@ module ActionController
     def unpermitted_parameters(event)
       debug do
         unpermitted_keys = event.payload[:keys]
-        display_unpermitted_keys = unpermitted_keys.map { |e| ":#{e}" }.join(", ")
-        context = event.payload[:context].map { |k, v| "#{k}: #{v}" }.join(", ")
-        color("Unpermitted parameter#{'s' if unpermitted_keys.size > 1}: #{display_unpermitted_keys}. Context: { #{context} }", RED)
+        display_unpermitted_keys = unpermitted_keys.map { |e| ":#{e}" }.join(', ')
+        context = event.payload[:context].map { |k, v| "#{k}: #{v}" }.join(', ')
+        color(
+          "Unpermitted parameter#{if unpermitted_keys.size > 1
+                                    's'
+                                  end}: #{display_unpermitted_keys}. Context: { #{context} }", RED
+        )
       end
     end
 
-    %w(write_fragment read_fragment exist_fragment? expire_fragment).each do |method|
+    %w[write_fragment read_fragment exist_fragment? expire_fragment].each do |method|
       class_eval <<-METHOD, __FILE__, __LINE__ + 1
         def #{method}(event)
           return unless logger.info? && ActionController::Base.enable_fragment_cache_logging

@@ -42,10 +42,10 @@ module ActionCable
     #     end
     #   end
     #
-    def assert_broadcasts(stream, number, &block)
+    def assert_broadcasts(stream, number, &)
       if block_given?
         original_count = broadcasts_size(stream)
-        _assert_nothing_raised_or_warn("assert_broadcasts", &block)
+        _assert_nothing_raised_or_warn('assert_broadcasts', &)
         new_count = broadcasts_size(stream)
         actual_count = new_count - original_count
       else
@@ -75,8 +75,8 @@ module ActionCable
     #
     #   assert_broadcasts 'messages', 0, &block
     #
-    def assert_no_broadcasts(stream, &block)
-      assert_broadcasts stream, 0, &block
+    def assert_no_broadcasts(stream, &)
+      assert_broadcasts(stream, 0, &)
     end
 
     # Asserts that the specified message has been sent to the stream.
@@ -94,7 +94,7 @@ module ActionCable
     #     end
     #   end
     #
-    def assert_broadcast_on(stream, data, &block)
+    def assert_broadcast_on(stream, data, &)
       # Encode to JSON and back–we want to use this value to compare
       # with decoded JSON.
       # Comparing JSON strings doesn't work due to the order if the keys.
@@ -106,7 +106,7 @@ module ActionCable
         old_messages = new_messages
         clear_messages(stream)
 
-        _assert_nothing_raised_or_warn("assert_broadcast_on", &block)
+        _assert_nothing_raised_or_warn('assert_broadcast_on', &)
         new_messages = broadcasts(stream)
         clear_messages(stream)
 
@@ -126,8 +126,9 @@ module ActionCable
     delegate :broadcasts, :clear_messages, to: :pubsub_adapter
 
     private
-      def broadcasts_size(channel)
-        broadcasts(channel).size
-      end
+
+    def broadcasts_size(channel)
+      broadcasts(channel).size
+    end
   end
 end

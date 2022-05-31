@@ -8,10 +8,10 @@ module ActionDispatch
     attr_reader :code, :name
 
     GENERIC_RESPONSE_CODES = { # :nodoc:
-      success: "2XX",
-      missing: "404",
-      redirect: "3XX",
-      error: "5XX"
+      success: '2XX',
+      missing: '404',
+      redirect: '3XX',
+      error: '5XX'
     }
 
     # Accepts a specific response status code as an Integer (404) or String
@@ -35,12 +35,13 @@ module ActionDispatch
     end
 
     private
-      def code_from_name(name)
-        GENERIC_RESPONSE_CODES[name] || Rack::Utils::SYMBOL_TO_STATUS_CODE[name]
-      end
 
-      def name_from_code(code)
-        GENERIC_RESPONSE_CODES.invert[code] || Rack::Utils::HTTP_STATUS_CODES[code]
-      end
+    def code_from_name(name)
+      GENERIC_RESPONSE_CODES[name] || Rack::Utils::SYMBOL_TO_STATUS_CODE[name]
+    end
+
+    def name_from_code(code)
+      GENERIC_RESPONSE_CODES.invert[code] || Rack::Utils::HTTP_STATUS_CODES[code]
+    end
   end
 end

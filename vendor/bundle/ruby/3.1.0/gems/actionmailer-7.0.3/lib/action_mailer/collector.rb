@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "abstract_controller/collector"
-require "active_support/core_ext/hash/reverse_merge"
-require "active_support/core_ext/array/extract_options"
+require 'abstract_controller/collector'
+require 'active_support/core_ext/hash/reverse_merge'
+require 'active_support/core_ext/array/extract_options'
 
 module ActionMailer
   class Collector
@@ -15,12 +15,13 @@ module ActionMailer
       @default_render = block
     end
 
-    def any(*args, &block)
+    def any(*args, &)
       options = args.extract_options!
-      raise ArgumentError, "You have to supply at least one format" if args.empty?
-      args.each { |type| send(type, options.dup, &block) }
+      raise ArgumentError, 'You have to supply at least one format' if args.empty?
+
+      args.each { |type| send(type, options.dup, &) }
     end
-    alias :all :any
+    alias all any
 
     def custom(mime, options = {})
       options.reverse_merge!(content_type: mime.to_s)

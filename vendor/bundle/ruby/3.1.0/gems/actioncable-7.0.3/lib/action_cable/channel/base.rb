@@ -1,7 +1,5 @@
-# frozen_string_literal: true
-
-require "set"
-require "active_support/rescuable"
+require 'set'
+require 'active_support/rescuable'
 
 module ActionCable
   module Channel
@@ -103,6 +101,7 @@ module ActionCable
       include ActiveSupport::Rescuable
 
       attr_reader :params, :connection, :identifier
+
       delegate :logger, to: :connection
 
       class << self
@@ -127,24 +126,27 @@ module ActionCable
         end
 
         private
-          # action_methods are cached and there is sometimes need to refresh
-          # them. ::clear_action_methods! allows you to do that, so next time
-          # you run action_methods, they will be recalculated.
-          def clear_action_methods! # :doc:
-            @action_methods = nil
-          end
 
-          # Refresh the cached action_methods when a new action_method is added.
-          def method_added(name) # :doc:
-            super
-            clear_action_methods!
-          end
+        # action_methods are cached and there is sometimes need to refresh
+        # them. ::clear_action_methods! allows you to do that, so next time
+        # you run action_methods, they will be recalculated.
+        # :doc:
+        def clear_action_methods!
+          @action_methods = nil
+        end
+
+        # Refresh the cached action_methods when a new action_method is added.
+        # :doc:
+        def method_added(name)
+          super
+          clear_action_methods!
+        end
       end
 
       def initialize(connection, identifier, params = {})
         @connection = connection
         @identifier = identifier
-        @params     = params
+        @params = params
 
         # When a channel is streaming via pubsub, we want to delay the confirmation
         # transmission until pubsub subscription is confirmed.
@@ -165,8 +167,8 @@ module ActionCable
         action = extract_action(data)
 
         if processable_action?(action)
-          payload = { channel_class: self.class.name, action: action, data: data }
-          ActiveSupport::Notifications.instrument("perform_action.action_cable", payload) do
+          payload = { channel_class: self.class.name, action:, data: }
+          ActiveSupport::Notifications.instrument('perform_action.action_cable', payload) do
             dispatch_action(action, data)
           end
         else
@@ -194,116 +196,129 @@ module ActionCable
       end
 
       private
-        # Called once a consumer has become a subscriber of the channel. Usually the place to set up any streams
-        # you want this channel to be sending to the subscriber.
-        def subscribed # :doc:
-          # Override in subclasses
+
+      # Called once a consumer has become a subscriber of the channel. Usually the place to set up any streams
+      # you want this channel to be sending to the subscriber.
+      # :doc:
+      def subscribed
+        # Override in subclasses
+      end
+
+      # Called once a consumer has cut its cable connection. Can be used for cleaning up connections or marking
+      # users as offline or the like.
+      # :doc:
+      def unsubscribed
+        # Override in subclasses
+      end
+
+      # Transmit a hash of data to the subscriber. The hash will automatically be wrapped in a JSON envelope with
+      # the proper channel identifier marked as the recipient.
+      # :doc:
+      def transmit(data, via: nil)
+        status = "#{self.class.name} transmitting #{data.inspect.truncate(300)}"
+        status += " (via #{via})" if via
+        logger.debug(status)
+
+        payload = { channel_class: self.class.name, data:, via: }
+        ActiveSupport::Notifications.instrument('transmit.action_cable', payload) do
+          connection.transmit identifier: @identifier, message: data
         end
+      end
 
-        # Called once a consumer has cut its cable connection. Can be used for cleaning up connections or marking
-        # users as offline or the like.
-        def unsubscribed # :doc:
-          # Override in subclasses
-        end
+      # :doc:
+      def ensure_confirmation_sent
+        return if subscription_rejected?
 
-        # Transmit a hash of data to the subscriber. The hash will automatically be wrapped in a JSON envelope with
-        # the proper channel identifier marked as the recipient.
-        def transmit(data, via: nil) # :doc:
-          status = "#{self.class.name} transmitting #{data.inspect.truncate(300)}"
-          status += " (via #{via})" if via
-          logger.debug(status)
+        @defer_subscription_confirmation_counter.decrement
+        transmit_subscription_confirmation unless defer_subscription_confirmation?
+      end
 
-          payload = { channel_class: self.class.name, data: data, via: via }
-          ActiveSupport::Notifications.instrument("transmit.action_cable", payload) do
-            connection.transmit identifier: @identifier, message: data
+      # :doc:
+      def defer_subscription_confirmation!
+        @defer_subscription_confirmation_counter.increment
+      end
+
+      # :doc:
+      def defer_subscription_confirmation?
+        @defer_subscription_confirmation_counter.value.positive?
+      end
+
+      # :doc:
+      def subscription_confirmation_sent?
+        @subscription_confirmation_sent
+      end
+
+      # :doc:
+      def reject
+        @reject_subscription = true
+      end
+
+      # :doc:
+      def subscription_rejected?
+        @reject_subscription
+      end
+
+      def delegate_connection_identifiers
+        connection.identifiers.each do |identifier|
+          define_singleton_method(identifier) do
+            connection.send(identifier)
           end
         end
+      end
 
-        def ensure_confirmation_sent # :doc:
-          return if subscription_rejected?
-          @defer_subscription_confirmation_counter.decrement
-          transmit_subscription_confirmation unless defer_subscription_confirmation?
+      def extract_action(data)
+        (data['action'].presence || :receive).to_sym
+      end
+
+      def processable_action?(action)
+        self.class.action_methods.include?(action.to_s) unless subscription_rejected?
+      end
+
+      def dispatch_action(action, data)
+        logger.info action_signature(action, data)
+
+        if method(action).arity == 1
+          public_send action, data
+        else
+          public_send action
         end
+      rescue Exception => e
+        rescue_with_handler(e) || raise
+      end
 
-        def defer_subscription_confirmation! # :doc:
-          @defer_subscription_confirmation_counter.increment
-        end
-
-        def defer_subscription_confirmation? # :doc:
-          @defer_subscription_confirmation_counter.value > 0
-        end
-
-        def subscription_confirmation_sent? # :doc:
-          @subscription_confirmation_sent
-        end
-
-        def reject # :doc:
-          @reject_subscription = true
-        end
-
-        def subscription_rejected? # :doc:
-          @reject_subscription
-        end
-
-        def delegate_connection_identifiers
-          connection.identifiers.each do |identifier|
-            define_singleton_method(identifier) do
-              connection.send(identifier)
-            end
+      def action_signature(action, data)
+        (+"#{self.class.name}##{action}").tap do |signature|
+          if (arguments = data.except('action')).any?
+            signature << "(#{arguments.inspect})"
           end
         end
+      end
 
-        def extract_action(data)
-          (data["action"].presence || :receive).to_sym
-        end
+      def transmit_subscription_confirmation
+        unless subscription_confirmation_sent?
+          logger.debug "#{self.class.name} is transmitting the subscription confirmation"
 
-        def processable_action?(action)
-          self.class.action_methods.include?(action.to_s) unless subscription_rejected?
-        end
-
-        def dispatch_action(action, data)
-          logger.info action_signature(action, data)
-
-          if method(action).arity == 1
-            public_send action, data
-          else
-            public_send action
-          end
-        rescue Exception => exception
-          rescue_with_handler(exception) || raise
-        end
-
-        def action_signature(action, data)
-          (+"#{self.class.name}##{action}").tap do |signature|
-            if (arguments = data.except("action")).any?
-              signature << "(#{arguments.inspect})"
-            end
+          ActiveSupport::Notifications.instrument('transmit_subscription_confirmation.action_cable',
+                                                  channel_class: self.class.name) do
+            connection.transmit identifier: @identifier, type: ActionCable::INTERNAL[:message_types][:confirmation]
+            @subscription_confirmation_sent = true
           end
         end
+      end
 
-        def transmit_subscription_confirmation
-          unless subscription_confirmation_sent?
-            logger.debug "#{self.class.name} is transmitting the subscription confirmation"
+      def reject_subscription
+        connection.subscriptions.remove_subscription self
+        transmit_subscription_rejection
+      end
 
-            ActiveSupport::Notifications.instrument("transmit_subscription_confirmation.action_cable", channel_class: self.class.name) do
-              connection.transmit identifier: @identifier, type: ActionCable::INTERNAL[:message_types][:confirmation]
-              @subscription_confirmation_sent = true
-            end
-          end
+      def transmit_subscription_rejection
+        logger.debug "#{self.class.name} is transmitting the subscription rejection"
+
+        ActiveSupport::Notifications.instrument('transmit_subscription_rejection.action_cable',
+                                                channel_class: self.class.name) do
+          connection.transmit identifier: @identifier, type: ActionCable::INTERNAL[:message_types][:rejection]
         end
-
-        def reject_subscription
-          connection.subscriptions.remove_subscription self
-          transmit_subscription_rejection
-        end
-
-        def transmit_subscription_rejection
-          logger.debug "#{self.class.name} is transmitting the subscription rejection"
-
-          ActiveSupport::Notifications.instrument("transmit_subscription_rejection.action_cable", channel_class: self.class.name) do
-            connection.transmit identifier: @identifier, type: ActionCable::INTERNAL[:message_types][:rejection]
-          end
-        end
+      end
     end
   end
 end

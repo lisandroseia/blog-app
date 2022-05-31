@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "action_dispatch/journey/nfa/dot"
+require 'action_dispatch/journey/nfa/dot'
 
 module ActionDispatch
   module Journey # :nodoc:
@@ -10,15 +10,15 @@ module ActionDispatch
 
         attr_reader :memos
 
-        DEFAULT_EXP = /[^.\/?]+/
+        DEFAULT_EXP = %r{[^./?]+}
         DEFAULT_EXP_ANCHORED = /\A#{DEFAULT_EXP}\Z/
 
         def initialize
           @stdparam_states = {}
-          @regexp_states   = {}
-          @string_states   = {}
-          @accepting       = {}
-          @memos           = Hash.new { |h, k| h[k] = [] }
+          @regexp_states = {}
+          @string_states = {}
+          @accepting = {}
+          @memos = Hash.new { |h, k| h[k] = [] }
         end
 
         def add_accepting(state)
@@ -53,17 +53,17 @@ module ActionDispatch
           tok = full_string.slice(start_index, end_index - start_index)
           token_matches_default_component = DEFAULT_EXP_ANCHORED.match?(tok)
 
-          t.each { |s, previous_start|
+          t.each do |s, previous_start|
             if previous_start.nil?
               # In the simple case of a "default" param regex do this fast-path
               # and add all next states.
               if token_matches_default_component && states = @stdparam_states[s]
-                states.each { |re, v| next_states << [v, nil].freeze if !v.nil? }
+                states.each { |_re, v| next_states << [v, nil].freeze unless v.nil? }
               end
 
               # When we have a literal string, we can just pull the next state
-              if states = @string_states[s]
-                next_states << [states[tok], nil].freeze unless states[tok].nil?
+              if (states = @string_states[s]) && !states[tok].nil?
+                next_states << [states[tok], nil].freeze
               end
             end
 
@@ -71,31 +71,31 @@ module ActionDispatch
             # not be terminated by the first "token" [./?], so we need to continue
             # to attempt to match this regexp as well as any successful paths that
             # continue out of it. both paths could be valid.
-            if states = @regexp_states[s]
-              slice_start = if previous_start.nil?
-                start_index
-              else
-                previous_start
-              end
+            next unless states = @regexp_states[s]
 
-              slice_length = end_index - slice_start
-              curr_slice = full_string.slice(slice_start, slice_length)
+            slice_start = if previous_start.nil?
+                            start_index
+                          else
+                            previous_start
+                          end
 
-              states.each { |re, v|
-                # if we match, we can try moving past this
-                next_states << [v, nil].freeze if !v.nil? && re.match?(curr_slice)
-              }
+            slice_length = end_index - slice_start
+            curr_slice = full_string.slice(slice_start, slice_length)
 
-              # and regardless, we must continue accepting tokens and retrying this regexp.
-              # we need to remember where we started as well so we can take bigger slices.
-              next_states << [s, slice_start].freeze
+            states.each do |re, v|
+              # if we match, we can try moving past this
+              next_states << [v, nil].freeze if !v.nil? && re.match?(curr_slice)
             end
-          }
+
+            # and regardless, we must continue accepting tokens and retrying this regexp.
+            # we need to remember where we started as well so we can take bigger slices.
+            next_states << [s, slice_start].freeze
+          end
 
           next_states
         end
 
-        def as_json(options = nil)
+        def as_json(_options = nil)
           simple_regexp = Hash.new { |h, k| h[k] = {} }
 
           @regexp_states.each do |from, hash|
@@ -105,57 +105,55 @@ module ActionDispatch
           end
 
           {
-            regexp_states:   simple_regexp,
-            string_states:   @string_states,
+            regexp_states: simple_regexp,
+            string_states: @string_states,
             stdparam_states: @stdparam_states,
-            accepting:       @accepting
+            accepting: @accepting
           }
         end
 
         def to_svg
-          svg = IO.popen("dot -Tsvg", "w+") { |f|
+          svg = IO.popen('dot -Tsvg', 'w+') do |f|
             f.write(to_dot)
             f.close_write
             f.readlines
-          }
+          end
           3.times { svg.shift }
-          svg.join.sub(/width="[^"]*"/, "").sub(/height="[^"]*"/, "")
+          svg.join.sub(/width="[^"]*"/, '').sub(/height="[^"]*"/, '')
         end
 
-        def visualizer(paths, title = "FSM")
-          viz_dir   = File.join __dir__, "..", "visualizer"
-          fsm_js    = File.read File.join(viz_dir, "fsm.js")
-          fsm_css   = File.read File.join(viz_dir, "fsm.css")
-          erb       = File.read File.join(viz_dir, "index.html.erb")
-          states    = "function tt() { return #{to_json}; }"
+        def visualizer(paths, title = 'FSM')
+          viz_dir = File.join __dir__, '..', 'visualizer'
+          fsm_js = File.read File.join(viz_dir, 'fsm.js')
+          fsm_css = File.read File.join(viz_dir, 'fsm.css')
+          erb = File.read File.join(viz_dir, 'index.html.erb')
+          states = "function tt() { return #{to_json}; }"
 
           fun_routes = paths.sample(3).map do |ast|
-            ast.filter_map { |n|
+            ast.filter_map do |n|
               case n
               when Nodes::Symbol
                 case n.left
-                when ":id" then rand(100).to_s
-                when ":format" then %w{ xml json }.sample
+                when ':id' then rand(100).to_s
+                when ':format' then %w[xml json].sample
                 else
-                  "omg"
+                  'omg'
                 end
               when Nodes::Terminal then n.symbol
-              else
-                nil
               end
-            }.join
+            end.join
           end
 
           stylesheets = [fsm_css]
-          svg         = to_svg
+          svg = to_svg
           javascripts = [states, fsm_js]
 
-          fun_routes  = fun_routes
+          fun_routes = fun_routes
           stylesheets = stylesheets
-          svg         = svg
+          svg = svg
           javascripts = javascripts
 
-          require "erb"
+          require 'erb'
           template = ERB.new erb
           template.result(binding)
         end
@@ -165,11 +163,11 @@ module ActionDispatch
           case sym
           when Regexp
             # we must match the whole string to a token boundary
-            if sym == DEFAULT_EXP
-              sym = DEFAULT_EXP_ANCHORED
-            else
-              sym = /\A#{sym}\Z/
-            end
+            sym = if sym == DEFAULT_EXP
+                    DEFAULT_EXP_ANCHORED
+                  else
+                    /\A#{sym}\Z/
+                  end
           when Symbol
             # account for symbols in the constraints the same as strings
             sym = sym.to_s
@@ -185,30 +183,31 @@ module ActionDispatch
         end
 
         def transitions
-          @string_states.flat_map { |from, hash|
+          @string_states.flat_map do |from, hash|
             hash.map { |s, to| [from, s, to] }
-          } + @stdparam_states.flat_map { |from, hash|
+          end + @stdparam_states.flat_map do |from, hash|
             hash.map { |s, to| [from, s, to] }
-          } + @regexp_states.flat_map { |from, hash|
+          end + @regexp_states.flat_map do |from, hash|
             hash.map { |s, to| [from, s, to] }
-          }
+          end
         end
 
         private
-          def states_hash_for(sym)
-            case sym
-            when String, Symbol
-              @string_states
-            when Regexp
-              if sym == DEFAULT_EXP
-                @stdparam_states
-              else
-                @regexp_states
-              end
+
+        def states_hash_for(sym)
+          case sym
+          when String, Symbol
+            @string_states
+          when Regexp
+            if sym == DEFAULT_EXP
+              @stdparam_states
             else
-              raise ArgumentError, "unknown symbol: %s" % sym.class
+              @regexp_states
             end
+          else
+            raise ArgumentError, 'unknown symbol: %s' % sym.class
           end
+        end
       end
     end
   end

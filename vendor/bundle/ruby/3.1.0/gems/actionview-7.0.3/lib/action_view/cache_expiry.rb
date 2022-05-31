@@ -5,7 +5,7 @@ module ActionView
     class Executor
       def initialize(watcher:)
         @execution_lock = Concurrent::ReentrantReadWriteLock.new
-        @cache_expiry = ViewModificationWatcher.new(watcher: watcher) do
+        @cache_expiry = ViewModificationWatcher.new(watcher:) do
           clear_cache
         end
       end
@@ -22,11 +22,12 @@ module ActionView
       end
 
       private
-        def clear_cache
-          @execution_lock.with_write_lock do
-            ActionView::LookupContext::DetailsKey.clear
-          end
+
+      def clear_cache
+        @execution_lock.with_write_lock do
+          ActionView::LookupContext::DetailsKey.clear
         end
+      end
     end
 
     class ViewModificationWatcher
@@ -43,24 +44,25 @@ module ActionView
           watched_dirs = dirs_to_watch
           return if watched_dirs.empty?
 
-          if watched_dirs != @watched_dirs
+          if watched_dirs == @watched_dirs
+            @watcher.execute_if_updated
+          else
             @watched_dirs = watched_dirs
             @watcher = @watcher_class.new([], watched_dirs, &@block)
             @watcher.execute
-          else
-            @watcher.execute_if_updated
           end
         end
       end
 
       private
-        def dirs_to_watch
-          all_view_paths.grep(FileSystemResolver).map!(&:path).tap(&:uniq!).sort!
-        end
 
-        def all_view_paths
-          ActionView::ViewPaths.all_view_paths.flat_map(&:paths)
-        end
+      def dirs_to_watch
+        all_view_paths.grep(FileSystemResolver).map!(&:path).tap(&:uniq!).sort!
+      end
+
+      def all_view_paths
+        ActionView::ViewPaths.all_view_paths.flat_map(&:paths)
+      end
     end
   end
 end

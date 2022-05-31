@@ -4,12 +4,16 @@ module ActionDispatch
   module Http
     module Cache
       module Request
-        HTTP_IF_MODIFIED_SINCE = "HTTP_IF_MODIFIED_SINCE"
-        HTTP_IF_NONE_MATCH     = "HTTP_IF_NONE_MATCH"
+        HTTP_IF_MODIFIED_SINCE = 'HTTP_IF_MODIFIED_SINCE'
+        HTTP_IF_NONE_MATCH = 'HTTP_IF_NONE_MATCH'
 
         def if_modified_since
           if since = get_header(HTTP_IF_MODIFIED_SINCE)
-            Time.rfc2822(since) rescue nil
+            begin
+              Time.rfc2822(since)
+            rescue StandardError
+              nil
+            end
           end
         end
 
@@ -28,7 +32,7 @@ module ActionDispatch
         def etag_matches?(etag)
           if etag
             validators = if_none_match_etags
-            validators.include?(etag) || validators.include?("*")
+            validators.include?(etag) || validators.include?('*')
           end
         end
 
@@ -37,7 +41,7 @@ module ActionDispatch
         # supplied, both must match, or the request is not considered fresh.
         def fresh?(response)
           last_modified = if_modified_since
-          etag          = if_none_match
+          etag = if_none_match
 
           return false unless last_modified || etag
 
@@ -103,14 +107,14 @@ module ActionDispatch
         end
 
         def weak_etag=(weak_validators)
-          set_header "ETag", generate_weak_etag(weak_validators)
+          set_header 'ETag', generate_weak_etag(weak_validators)
         end
 
         def strong_etag=(strong_validators)
-          set_header "ETag", generate_strong_etag(strong_validators)
+          set_header 'ETag', generate_strong_etag(strong_validators)
         end
 
-        def etag?; etag; end
+        def etag?() = etag
 
         # True if an ETag is set and it's a weak validator (preceded with W/)
         def weak_etag?
@@ -122,10 +126,11 @@ module ActionDispatch
           etag? && !weak_etag?
         end
 
-      private
-        DATE          = "Date"
-        LAST_MODIFIED = "Last-Modified"
-        SPECIAL_KEYS  = Set.new(%w[extras no-store no-cache max-age public private must-revalidate])
+        private
+
+        DATE = 'Date'
+        LAST_MODIFIED = 'Last-Modified'
+        SPECIAL_KEYS = Set.new(%w[extras no-store no-cache max-age public private must-revalidate])
 
         def generate_weak_etag(validators)
           "W/#{generate_strong_etag(validators)}"
@@ -137,7 +142,7 @@ module ActionDispatch
 
         def cache_control_segments
           if cache_control = _cache_control
-            cache_control.delete(" ").split(",")
+            cache_control.delete(' ').split(',')
           else
             []
           end
@@ -147,10 +152,10 @@ module ActionDispatch
           cache_control = {}
 
           cache_control_segments.each do |segment|
-            directive, argument = segment.split("=", 2)
+            directive, argument = segment.split('=', 2)
 
             if SPECIAL_KEYS.include? directive
-              directive.tr!("-", "_")
+              directive.tr!('-', '_')
               cache_control[directive.to_sym] = argument || true
             else
               cache_control[:extras] ||= []
@@ -165,27 +170,25 @@ module ActionDispatch
           @cache_control = cache_control_headers
         end
 
-        DEFAULT_CACHE_CONTROL = "max-age=0, private, must-revalidate"
-        NO_STORE              = "no-store"
-        NO_CACHE              = "no-cache"
-        PUBLIC                = "public"
-        PRIVATE               = "private"
-        MUST_REVALIDATE       = "must-revalidate"
+        DEFAULT_CACHE_CONTROL = 'max-age=0, private, must-revalidate'
+        NO_STORE = 'no-store'
+        NO_CACHE = 'no-cache'
+        PUBLIC = 'public'
+        PRIVATE = 'private'
+        MUST_REVALIDATE = 'must-revalidate'
 
         def handle_conditional_get!
           # Normally default cache control setting is handled by ETag
           # middleware. But, if an etag is already set, the middleware
           # defaults to `no-cache` unless a default `Cache-Control` value is
           # previously set. So, set a default one here.
-          if (etag? || last_modified?) && !self._cache_control
-            self._cache_control = DEFAULT_CACHE_CONTROL
-          end
+          self._cache_control = DEFAULT_CACHE_CONTROL if (etag? || last_modified?) && !_cache_control
         end
 
         def merge_and_normalize_cache_control!(cache_control)
           control = cache_control_headers
 
-          return if control.empty? && cache_control.empty?  # Let middleware handle default behavior
+          return if control.empty? && cache_control.empty? # Let middleware handle default behavior
 
           if cache_control.any?
             # Any caching directive coming from a controller overrides
@@ -225,7 +228,7 @@ module ActionDispatch
             options.concat(extras) if extras
           end
 
-          self._cache_control = options.join(", ")
+          self._cache_control = options.join(', ')
         end
       end
     end

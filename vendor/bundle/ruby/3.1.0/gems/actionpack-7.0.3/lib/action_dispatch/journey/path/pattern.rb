@@ -7,17 +7,17 @@ module ActionDispatch
         attr_reader :ast, :names, :requirements, :anchored, :spec
 
         def initialize(ast, requirements, separators, anchored)
-          @ast          = ast
-          @spec         = ast.root
+          @ast = ast
+          @spec = ast.root
           @requirements = requirements
-          @separators   = separators
-          @anchored     = anchored
+          @separators = separators
+          @anchored = anchored
 
-          @names          = ast.names
+          @names = ast.names
           @optional_names = nil
           @required_names = nil
-          @re             = nil
-          @offsets        = nil
+          @re = nil
+          @offsets = nil
         end
 
         def build_formatter
@@ -35,7 +35,7 @@ module ActionDispatch
           # each required param must not be surrounded by a literal, otherwise it isn't simple to chunk-match the url piecemeal
           terminals = ast.terminals
 
-          terminals.each_with_index { |s, index|
+          terminals.each_with_index do |s, index|
             next if index < 1
             next if s.type == :DOT || s.type == :SLASH
 
@@ -47,7 +47,7 @@ module ActionDispatch
 
             return false if back.literal?
             return false if !fwd.nil? && fwd.literal?
-          }
+          end
 
           true
         end
@@ -57,21 +57,21 @@ module ActionDispatch
         end
 
         def optional_names
-          @optional_names ||= spec.find_all(&:group?).flat_map { |group|
+          @optional_names ||= spec.find_all(&:group?).flat_map do |group|
             group.find_all(&:symbol?)
-          }.map(&:name).uniq
+          end.map(&:name).uniq
         end
 
         class AnchoredRegexp < Journey::Visitors::Visitor # :nodoc:
           def initialize(separator, matchers)
             @separator = separator
-            @matchers  = matchers
+            @matchers = matchers
             @separator_re = "([^#{separator}]+)"
             super()
           end
 
           def accept(node)
-            %r{\A#{visit node}\Z}
+            /\A#{visit node}\Z/
           end
 
           def visit_CAT(node)
@@ -94,7 +94,7 @@ module ActionDispatch
           def visit_LITERAL(node)
             Regexp.escape(node.left)
           end
-          alias :visit_DOT :visit_LITERAL
+          alias visit_DOT visit_LITERAL
 
           def visit_SLASH(node)
             node.left
@@ -102,19 +102,19 @@ module ActionDispatch
 
           def visit_STAR(node)
             re = @matchers[node.left.to_sym]
-            re ? "(#{re})" : "(.+)"
+            re ? "(#{re})" : '(.+)'
           end
 
           def visit_OR(node)
             children = node.children.map { |n| visit n }
-            "(?:#{children.join(?|)})"
+            "(?:#{children.join('|')})"
           end
         end
 
         class UnanchoredRegexp < AnchoredRegexp # :nodoc:
           def accept(node)
             path = visit node
-            path == "/" ? %r{\A/} : %r{\A#{path}(?:\b|\Z|/)}
+            path == '/' ? %r{\A/} : %r{\A#{path}(?:\b|\Z|/)}
           end
         end
 
@@ -122,9 +122,9 @@ module ActionDispatch
           attr_reader :names
 
           def initialize(names, offsets, match)
-            @names   = names
+            @names = names
             @offsets = offsets
-            @match   = match
+            @match = match
           end
 
           def captures
@@ -155,9 +155,10 @@ module ActionDispatch
 
         def match(other)
           return unless match = to_regexp.match(other)
+
           MatchData.new(names, offsets, match)
         end
-        alias :=~ :match
+        alias =~ match
 
         def match?(other)
           to_regexp.match?(other)
@@ -178,28 +179,29 @@ module ActionDispatch
         end
 
         private
-          def regexp_visitor
-            @anchored ? AnchoredRegexp : UnanchoredRegexp
-          end
 
-          def offsets
-            return @offsets if @offsets
+        def regexp_visitor
+          @anchored ? AnchoredRegexp : UnanchoredRegexp
+        end
 
-            @offsets = [0]
+        def offsets
+          return @offsets if @offsets
 
-            spec.find_all(&:symbol?).each do |node|
-              node = node.to_sym
+          @offsets = [0]
 
-              if @requirements.key?(node)
-                re = /#{Regexp.union(@requirements[node])}|/
-                @offsets.push((re.match("").length - 1) + @offsets.last)
-              else
-                @offsets << @offsets.last
-              end
+          spec.find_all(&:symbol?).each do |node|
+            node = node.to_sym
+
+            if @requirements.key?(node)
+              re = /#{Regexp.union(@requirements[node])}|/
+              @offsets.push((re.match('').length - 1) + @offsets.last)
+            else
+              @offsets << @offsets.last
             end
-
-            @offsets
           end
+
+          @offsets
+        end
       end
     end
   end

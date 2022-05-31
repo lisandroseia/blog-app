@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-require "abstract_controller/error"
-require "action_view"
-require "action_view/view_paths"
-require "set"
+require 'abstract_controller/error'
+require 'action_view'
+require 'action_view/view_paths'
+require 'set'
 
 module AbstractController
   class DoubleRenderError < Error
-    DEFAULT_MESSAGE = "Render and/or redirect were called multiple times in this action. Please note that you may only call render OR redirect, and at most once per action. Also note that neither redirect nor render terminate execution of the action, so if you want to exit an action after redirecting, you need to do something like \"redirect_to(...) and return\"."
+    DEFAULT_MESSAGE = 'Render and/or redirect were called multiple times in this action. Please note that you may only call render OR redirect, and at most once per action. Also note that neither redirect nor render terminate execution of the action, so if you want to exit an action after redirecting, you need to do something like "redirect_to(...) and return".'
 
     def initialize(message = nil)
       super(message || DEFAULT_MESSAGE)
@@ -20,8 +20,8 @@ module AbstractController
 
     # Normalizes arguments, options and then delegates render_to_body and
     # sticks the result in <tt>self.response_body</tt>.
-    def render(*args, &block)
-      options = _normalize_render(*args, &block)
+    def render(*args, &)
+      options = _normalize_render(*args, &)
       rendered_body = render_to_body(options)
       if options[:html]
         _set_html_content_type
@@ -42,21 +42,20 @@ module AbstractController
     # (as ActionController extends it to be anything that
     # responds to the method each), this method needs to be
     # overridden in order to still return a string.
-    def render_to_string(*args, &block)
-      options = _normalize_render(*args, &block)
+    def render_to_string(*args, &)
+      options = _normalize_render(*args, &)
       render_to_body(options)
     end
 
     # Performs the actual template rendering.
-    def render_to_body(options = {})
-    end
+    def render_to_body(options = {}); end
 
     # Returns Content-Type of rendered content.
     def rendered_format
       Mime[:text]
     end
 
-    DEFAULT_PROTECTED_INSTANCE_VARIABLES = %i(@_action_name @_response_body @_formats @_prefixes)
+    DEFAULT_PROTECTED_INSTANCE_VARIABLES = %i[@_action_name @_response_body @_formats @_prefixes]
 
     # This method should return a hash with assigns.
     # You can overwrite this configuration per controller.
@@ -68,7 +67,8 @@ module AbstractController
       end
     end
 
-  private
+    private
+
     # Normalize args by converting <tt>render "foo"</tt> to
     # <tt>render :action => "foo"</tt> and <tt>render "foo/bar"</tt> to
     # <tt>render :file => "foo/bar"</tt>.
@@ -77,7 +77,7 @@ module AbstractController
         if action.permitted?
           action
         else
-          raise ArgumentError, "render parameters are not permitted"
+          raise ArgumentError, 'render parameters are not permitted'
         end
       elsif action.is_a?(Hash)
         action
@@ -97,24 +97,19 @@ module AbstractController
     end
 
     # Process the rendered format.
-    def _process_format(format) # :nodoc:
-    end
+    def _process_format(format); end
 
-    def _process_variant(options)
-    end
+    def _process_variant(options); end
 
-    def _set_html_content_type # :nodoc:
-    end
+    def _set_html_content_type; end
 
-    def _set_vary_header # :nodoc:
-    end
+    def _set_vary_header; end
 
-    def _set_rendered_content_type(format) # :nodoc:
-    end
+    def _set_rendered_content_type(format); end
 
     # Normalize args and options.
-    def _normalize_render(*args, &block) # :nodoc:
-      options = _normalize_args(*args, &block)
+    def _normalize_render(*args, &) # :nodoc:
+      options = _normalize_args(*args, &)
       _process_variant(options)
       _normalize_options(options)
       options

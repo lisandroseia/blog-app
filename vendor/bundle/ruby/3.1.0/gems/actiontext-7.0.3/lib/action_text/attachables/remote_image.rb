@@ -7,22 +7,21 @@ module ActionText
 
       class << self
         def from_node(node)
-          if node["url"] && content_type_is_image?(node["content-type"])
-            new(attributes_from_node(node))
-          end
+          new(attributes_from_node(node)) if node['url'] && content_type_is_image?(node['content-type'])
         end
 
         private
-          def content_type_is_image?(content_type)
-            content_type.to_s.match?(/^image(\/.+|$)/)
-          end
 
-          def attributes_from_node(node)
-            { url: node["url"],
-              content_type: node["content-type"],
-              width: node["width"],
-              height: node["height"] }
-          end
+        def content_type_is_image?(content_type)
+          content_type.to_s.match?(%r{^image(/.+|$)})
+        end
+
+        def attributes_from_node(node)
+          { url: node['url'],
+            content_type: node['content-type'],
+            width: node['width'],
+            height: node['height'] }
+        end
       end
 
       attr_reader :url, :content_type, :width, :height
@@ -35,11 +34,11 @@ module ActionText
       end
 
       def attachable_plain_text_representation(caption)
-        "[#{caption || "Image"}]"
+        "[#{caption || 'Image'}]"
       end
 
       def to_partial_path
-        "action_text/attachables/remote_image"
+        'action_text/attachables/remote_image'
       end
     end
   end

@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-require "rack/session/abstract/id"
+require 'rack/session/abstract/id'
 
 module ActionDispatch
   class Request
     # Session is responsible for lazily loading the session from store.
     class Session # :nodoc:
-      DisabledSessionError    = Class.new(StandardError)
-      ENV_SESSION_KEY         = Rack::RACK_SESSION # :nodoc:
+      DisabledSessionError = Class.new(StandardError)
+      ENV_SESSION_KEY = Rack::RACK_SESSION # :nodoc:
       ENV_SESSION_OPTIONS_KEY = Rack::RACK_SESSION_OPTIONS # :nodoc:
 
       # Singleton object used to determine if an optional param wasn't specified.
@@ -16,7 +16,7 @@ module ActionDispatch
       # Creates a session hash, merging the properties of the previous session if any.
       def self.create(store, req, default_options)
         session_was = find req
-        session     = Request::Session.new(store, req)
+        session = Request::Session.new(store, req)
         session.merge! session_was if session_was
 
         set(req, session)
@@ -52,7 +52,7 @@ module ActionDispatch
         end
 
         def initialize(by, default_options)
-          @by       = by
+          @by = by
           @delegate = default_options.dup
         end
 
@@ -61,23 +61,26 @@ module ActionDispatch
         end
 
         def id(req)
-          @delegate.fetch(:id) {
+          @delegate.fetch(:id) do
             @by.send(:extract_session_id, req)
-          }
+          end
         end
 
-        def []=(k, v);        @delegate[k] = v; end
-        def to_hash;          @delegate.dup; end
-        def values_at(*args); @delegate.values_at(*args); end
+        def []=(k, v)
+          @delegate[k] = v
+        end
+
+        def to_hash() = @delegate.dup
+        def values_at(*args) = @delegate.values_at(*args)
       end
 
       def initialize(by, req, enabled: true)
-        @by       = by
-        @req      = req
+        @by = by
+        @req = req
         @delegate = {}
-        @loaded   = false
-        @exists   = nil # We haven't checked yet.
-        @enabled  = enabled
+        @loaded = false
+        @exists = nil # We haven't checked yet.
+        @enabled = enabled
       end
 
       def id
@@ -111,7 +114,7 @@ module ActionDispatch
         load_for_read!
         key = key.to_s
 
-        if key == "session_id"
+        if key == 'session_id'
           id&.public_id
         else
           @delegate[key]
@@ -131,8 +134,8 @@ module ActionDispatch
         load_for_read!
         @delegate.key?(key.to_s)
       end
-      alias :key? :has_key?
-      alias :include? :has_key?
+      alias key? has_key?
+      alias include? has_key?
 
       # Returns keys of the session as Array.
       def keys
@@ -163,7 +166,7 @@ module ActionDispatch
         load_for_read!
         @delegate.dup.delete_if { |_, v| v.nil? }
       end
-      alias :to_h :to_hash
+      alias to_h to_hash
 
       # Updates the session with given Hash.
       #
@@ -200,12 +203,12 @@ module ActionDispatch
       #     :bar
       #   end
       #   # => :bar
-      def fetch(key, default = Unspecified, &block)
+      def fetch(key, default = Unspecified, &)
         load_for_read!
         if default == Unspecified
-          @delegate.fetch(key.to_s, &block)
+          @delegate.fetch(key.to_s, &)
         else
-          @delegate.fetch(key.to_s, default, &block)
+          @delegate.fetch(key.to_s, default, &)
         end
       end
 
@@ -220,6 +223,7 @@ module ActionDispatch
       def exists?
         return false unless enabled?
         return @exists unless @exists.nil?
+
         @exists = @by.send(:session_exists?, @req)
       end
 
@@ -237,35 +241,37 @@ module ActionDispatch
         @delegate.merge!(other)
       end
 
-      def each(&block)
-        to_hash.each(&block)
+      def each(&)
+        to_hash.each(&)
       end
 
       private
-        def load_for_read!
-          load! if !loaded? && exists?
-        end
 
-        def load_for_write!
-          if enabled?
-            load! unless loaded?
-          else
-            raise DisabledSessionError, "Your application has sessions disabled. To write to the session you must first configure a session store"
-          end
-        end
+      def load_for_read!
+        load! if !loaded? && exists?
+      end
 
-        def load_for_delete!
-          load! if enabled? && !loaded?
+      def load_for_write!
+        if enabled?
+          load! unless loaded?
+        else
+          raise DisabledSessionError,
+                'Your application has sessions disabled. To write to the session you must first configure a session store'
         end
+      end
 
-        def load!
-          if enabled?
-            id, session = @by.load_session @req
-            options[:id] = id
-            @delegate.replace(session.stringify_keys)
-          end
-          @loaded = true
+      def load_for_delete!
+        load! if enabled? && !loaded?
+      end
+
+      def load!
+        if enabled?
+          id, session = @by.load_session @req
+          options[:id] = id
+          @delegate.replace(session.stringify_keys)
         end
+        @loaded = true
+      end
     end
   end
 end

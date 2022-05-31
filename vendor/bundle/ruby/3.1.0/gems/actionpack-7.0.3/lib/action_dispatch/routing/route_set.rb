@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-require "action_dispatch/journey"
-require "active_support/core_ext/object/to_query"
-require "active_support/core_ext/module/redefine_method"
-require "active_support/core_ext/module/remove_method"
-require "active_support/core_ext/array/extract_options"
-require "action_controller/metal/exceptions"
-require "action_dispatch/routing/endpoint"
+require 'action_dispatch/journey'
+require 'active_support/core_ext/object/to_query'
+require 'active_support/core_ext/module/redefine_method'
+require 'active_support/core_ext/module/remove_method'
+require 'active_support/core_ext/array/extract_options'
+require 'action_controller/metal/exceptions'
+require 'action_dispatch/routing/endpoint'
 
 module ActionDispatch
   module Routing
@@ -23,22 +23,23 @@ module ActionDispatch
           @raise_on_name_error = raise_on_name_error
         end
 
-        def dispatcher?; true; end
+        def dispatcher?() = true
 
         def serve(req)
-          params     = req.path_parameters
+          params = req.path_parameters
           controller = controller req
-          res        = controller.make_response! req
+          res = controller.make_response! req
           dispatch(controller, params[:action], req, res)
         rescue ActionController::RoutingError
           if @raise_on_name_error
             raise
           else
-            [404, { "X-Cascade" => "pass" }, []]
+            [404, { 'X-Cascade' => 'pass' }, []]
           end
         end
 
-      private
+        private
+
         def controller(req)
           req.controller_class
         rescue NameError => e
@@ -57,7 +58,8 @@ module ActionDispatch
         end
 
         private
-          def controller(_); @controller_class; end
+
+        def controller(_) = @controller_class
       end
 
       # A NamedRouteCollection instance is a collection of named routes, and also
@@ -72,7 +74,7 @@ module ActionDispatch
           @routes = {}
           @path_helpers = Set.new
           @url_helpers = Set.new
-          @url_helpers_module  = Module.new
+          @url_helpers_module = Module.new
           @path_helpers_module = Module.new
         end
 
@@ -100,9 +102,9 @@ module ActionDispatch
         end
 
         def add(name, route)
-          key       = name.to_sym
+          key = name.to_sym
           path_name = :"#{name}_path"
-          url_name  = :"#{name}_url"
+          url_name = :"#{name}_url"
 
           if routes.key? key
             @path_helpers_module.undef_method path_name
@@ -124,15 +126,16 @@ module ActionDispatch
 
         def key?(name)
           return unless name
+
           routes.key? name.to_sym
         end
 
-        alias []=   add
-        alias []    get
+        alias []= add
+        alias [] get
         alias clear clear!
 
-        def each(&block)
-          routes.each(&block)
+        def each(&)
+          routes.each(&)
           self
         end
 
@@ -146,8 +149,8 @@ module ActionDispatch
 
         # Given a +name+, defines name_path and name_url helpers.
         # Used by 'direct', 'resolve', and 'polymorphic' route helpers.
-        def add_url_helper(name, defaults, &block)
-          helper = CustomUrlHelper.new(name, defaults, &block)
+        def add_url_helper(name, defaults, &)
+          helper = CustomUrlHelper.new(name, defaults, &)
           path_name = :"#{name}_path"
           url_name = :"#{name}_url"
 
@@ -190,22 +193,20 @@ module ActionDispatch
             def initialize(route, options, route_name)
               super
               @required_parts = @route.required_parts
-              @arg_size       = @required_parts.size
+              @arg_size = @required_parts.size
             end
 
             def call(t, method_name, args, inner_options, url_strategy)
               if args.size == arg_size && !inner_options && optimize_routes_generation?(t)
                 options = t.url_options.merge @options
                 path = optimized_helper(args)
-                path << "/" if options[:trailing_slash] && !path.end_with?("/")
+                path << '/' if options[:trailing_slash] && !path.end_with?('/')
                 options[:path] = path
 
                 original_script_name = options.delete(:original_script_name)
                 script_name = t._routes.find_script_name(options)
 
-                if original_script_name
-                  script_name = original_script_name + script_name
-                end
+                script_name = original_script_name + script_name if original_script_name
 
                 options[:script_name] = script_name
 
@@ -216,47 +217,48 @@ module ActionDispatch
             end
 
             private
-              def optimized_helper(args)
-                params = parameterize_args(args) do
-                  raise_generation_error(args)
-                end
 
-                @route.format params
+            def optimized_helper(args)
+              params = parameterize_args(args) do
+                raise_generation_error(args)
               end
 
-              def optimize_routes_generation?(t)
-                t.send(:optimize_routes_generation?)
-              end
+              @route.format params
+            end
 
-              def parameterize_args(args)
-                params = {}
-                @arg_size.times { |i|
-                  key = @required_parts[i]
-                  value = args[i].to_param
-                  yield key if value.nil? || value.empty?
-                  params[key] = value
-                }
-                params
-              end
+            def optimize_routes_generation?(t)
+              t.send(:optimize_routes_generation?)
+            end
 
-              def raise_generation_error(args)
-                missing_keys = []
-                params = parameterize_args(args) { |missing_key|
-                  missing_keys << missing_key
-                }
-                constraints = Hash[@route.requirements.merge(params).sort_by { |k, v| k.to_s }]
-                message = +"No route matches #{constraints.inspect}"
-                message << ", missing required keys: #{missing_keys.sort.inspect}"
-
-                raise ActionController::UrlGenerationError, message
+            def parameterize_args(args)
+              params = {}
+              @arg_size.times do |i|
+                key = @required_parts[i]
+                value = args[i].to_param
+                yield key if value.nil? || value.empty?
+                params[key] = value
               end
+              params
+            end
+
+            def raise_generation_error(args)
+              missing_keys = []
+              params = parameterize_args(args) do |missing_key|
+                missing_keys << missing_key
+              end
+              constraints = @route.requirements.merge(params).sort_by { |k, _v| k.to_s }.to_h
+              message = +"No route matches #{constraints.inspect}"
+              message << ", missing required keys: #{missing_keys.sort.inspect}"
+
+              raise ActionController::UrlGenerationError, message
+            end
           end
 
           def initialize(route, options, route_name)
-            @options      = options
+            @options = options
             @segment_keys = route.segment_keys.uniq
-            @route        = route
-            @route_name   = route_name
+            @route = route
+            @route_name = route_name
           end
 
           def call(t, method_name, args, inner_options, url_strategy)
@@ -274,11 +276,11 @@ module ActionDispatch
           def handle_positional_args(controller_options, inner_options, args, result, path_params)
             if args.size > 0
               # take format into account
-              if path_params.include?(:format)
-                path_params_size = path_params.size - 1
-              else
-                path_params_size = path_params.size
-              end
+              path_params_size = if path_params.include?(:format)
+                                   path_params.size - 1
+                                 else
+                                   path_params.size
+                                 end
 
               if args.size < path_params_size
                 path_params -= controller_options.keys
@@ -301,60 +303,56 @@ module ActionDispatch
         end
 
         private
-          # Create a URL helper allowing ordered parameters to be associated
-          # with corresponding dynamic segments, so you can do:
-          #
-          #   foo_url(bar, baz, bang)
-          #
-          # Instead of:
-          #
-          #   foo_url(bar: bar, baz: baz, bang: bang)
-          #
-          # Also allow options hash, so you can do:
-          #
-          #   foo_url(bar, baz, bang, sort_by: 'baz')
-          #
-          def define_url_helper(mod, name, helper, url_strategy)
-            mod.define_method(name) do |*args|
-              last = args.last
-              options = \
-                case last
-                when Hash
-                  args.pop
-                when ActionController::Parameters
-                  args.pop.to_h
-                end
-              helper.call(self, name, args, options, url_strategy)
-            end
+
+        # Create a URL helper allowing ordered parameters to be associated
+        # with corresponding dynamic segments, so you can do:
+        #
+        #   foo_url(bar, baz, bang)
+        #
+        # Instead of:
+        #
+        #   foo_url(bar: bar, baz: baz, bang: bang)
+        #
+        # Also allow options hash, so you can do:
+        #
+        #   foo_url(bar, baz, bang, sort_by: 'baz')
+        #
+        def define_url_helper(mod, name, helper, url_strategy)
+          mod.define_method(name) do |*args|
+            last = args.last
+            options = \
+              case last
+              when Hash
+                args.pop
+              when ActionController::Parameters
+                args.pop.to_h
+              end
+            helper.call(self, name, args, options, url_strategy)
           end
+        end
       end
 
       # strategy for building URLs to send to the client
-      PATH    = ->(options) { ActionDispatch::Http::URL.path_for(options) }
+      PATH = ->(options) { ActionDispatch::Http::URL.path_for(options) }
       UNKNOWN = ->(options) { ActionDispatch::Http::URL.url_for(options) }
 
-      attr_accessor :formatter, :set, :named_routes, :default_scope, :router
-      attr_accessor :disable_clear_and_finalize, :resources_path_names
-      attr_accessor :default_url_options, :draw_paths
+      attr_accessor :formatter, :set, :named_routes, :default_scope, :router, :disable_clear_and_finalize,
+                    :resources_path_names, :default_url_options, :draw_paths
       attr_reader :env_key, :polymorphic_mappings
 
-      alias :routes :set
+      alias routes set
 
       def self.default_resources_path_names
-        { new: "new", edit: "edit" }
+        { new: 'new', edit: 'edit' }
       end
 
       def self.new_with_config(config)
         route_set_config = DEFAULT_CONFIG
 
         # engines apparently don't have this set
-        if config.respond_to? :relative_url_root
-          route_set_config.relative_url_root = config.relative_url_root
-        end
+        route_set_config.relative_url_root = config.relative_url_root if config.respond_to? :relative_url_root
 
-        if config.respond_to? :api_only
-          route_set_config.api_only = config.api_only
-        end
+        route_set_config.api_only = config.api_only if config.respond_to? :api_only
 
         new route_set_config
       end
@@ -369,14 +367,14 @@ module ActionDispatch
         self.default_url_options = {}
         self.draw_paths = []
 
-        @config                     = config
-        @append                     = []
-        @prepend                    = []
+        @config = config
+        @append = []
+        @prepend = []
         @disable_clear_and_finalize = false
-        @finalized                  = false
-        @env_key                    = "ROUTES_#{object_id}_SCRIPT_NAME"
+        @finalized = false
+        @env_key = "ROUTES_#{object_id}_SCRIPT_NAME"
 
-        @set    = Journey::Routes.new
+        @set = Journey::Routes.new
         @router = Journey::Router.new @set
         @formatter = Journey::Formatter.new self
         @polymorphic_mappings = {}
@@ -432,6 +430,7 @@ module ActionDispatch
 
       def finalize!
         return if @finalized
+
         @append.each { |blk| eval_block(blk) }
         @finalized = true
       end
@@ -537,8 +536,8 @@ module ActionDispatch
               @_proxy.polymorphic_path(record_or_hash_or_array, options)
             end
 
-            def _routes; @_proxy._routes; end
-            def url_options; {}; end
+            def _routes() = @_proxy._routes
+            def url_options() = {}
           end
 
           url_helpers = routes.named_routes.url_helpers_module
@@ -586,10 +585,10 @@ module ActionDispatch
 
         if name && named_routes[name]
           raise ArgumentError, "Invalid route name, already in use: '#{name}' \n" \
-            "You may have defined two routes with the same name using the `:as` option, or " \
-            "you may be overriding a route already defined by a resource with the same naming. " \
-            "For the latter, you can restrict the routes created with `resources` as explained here: \n" \
-            "https://guides.rubyonrails.org/routing.html#restricting-the-routes-created"
+                               'You may have defined two routes with the same name using the `:as` option, or ' \
+                               'you may be overriding a route already defined by a resource with the same naming. ' \
+                               "For the latter, you can restrict the routes created with `resources` as explained here: \n" \
+                               'https://guides.rubyonrails.org/routing.html#restricting-the-routes-created'
         end
 
         route = @set.add_route(name, mapping)
@@ -612,12 +611,12 @@ module ActionDispatch
         route
       end
 
-      def add_polymorphic_mapping(klass, options, &block)
-        @polymorphic_mappings[klass] = CustomUrlHelper.new(klass, options, &block)
+      def add_polymorphic_mapping(klass, options, &)
+        @polymorphic_mappings[klass] = CustomUrlHelper.new(klass, options, &)
       end
 
-      def add_url_helper(name, options, &block)
-        named_routes.add_url_helper(name, options, &block)
+      def add_url_helper(name, options, &)
+        named_routes.add_url_helper(name, options, &)
       end
 
       class CustomUrlHelper
@@ -634,20 +633,21 @@ module ActionDispatch
           url = t.full_url_for(eval_block(t, args, options))
 
           if only_path
-            "/" + url.partition(%r{(?<!/)/(?!/)}).last
+            '/' + url.partition(%r{(?<!/)/(?!/)}).last
           else
             url
           end
         end
 
         private
-          def eval_block(t, args, options)
-            t.instance_exec(*args, merge_defaults(options), &block)
-          end
 
-          def merge_defaults(options)
-            defaults ? defaults.merge(options) : options
-          end
+        def eval_block(t, args, options)
+          t.instance_exec(*args, merge_defaults(options), &block)
+        end
+
+        def merge_defaults(options)
+          defaults ? defaults.merge(options) : options
+        end
       end
 
       class Generator
@@ -655,9 +655,9 @@ module ActionDispatch
 
         def initialize(named_route, options, recall, set)
           @named_route = named_route
-          @options     = options
-          @recall      = recall
-          @set         = set
+          @options = options
+          @recall = recall
+          @set = set
 
           normalize_options!
           normalize_controller_action_id!
@@ -674,10 +674,8 @@ module ActionDispatch
         end
 
         def use_recall_for(key)
-          if @recall[key] && (!@options.key?(key) || @options[key] == @recall[key])
-            if !named_route_exists? || segment_keys.include?(key)
-              @options[key] = @recall[key]
-            end
+          if @recall[key] && (!@options.key?(key) || @options[key] == @recall[key]) && (!named_route_exists? || segment_keys.include?(key))
+            @options[key] = @recall[key]
           end
         end
 
@@ -692,13 +690,11 @@ module ActionDispatch
           # be "index", not the recalled action of "show".
 
           if options[:controller]
-            options[:action]     ||= "index"
-            options[:controller]   = options[:controller].to_s
+            options[:action] ||= 'index'
+            options[:controller] = options[:controller].to_s
           end
 
-          if options.key?(:action)
-            options[:action] = (options[:action] || "index").to_s
-          end
+          options[:action] = (options[:action] || 'index').to_s if options.key?(:action)
         end
 
         # This pulls :controller, :action, and :id out of the recall.
@@ -715,22 +711,22 @@ module ActionDispatch
         # if the current controller is "foo/bar/baz" and controller: "baz/bat"
         # is specified, the controller becomes "foo/baz/bat"
         def use_relative_controller!
-          if !named_route && different_controller? && !controller.start_with?("/")
-            old_parts = current_controller.split("/")
-            size = controller.count("/") + 1
+          if !named_route && different_controller? && !controller.start_with?('/')
+            old_parts = current_controller.split('/')
+            size = controller.count('/') + 1
             parts = old_parts[0...-size] << controller
-            @options[:controller] = parts.join("/")
+            @options[:controller] = parts.join('/')
           end
         end
 
         # Remove leading slashes from controllers
         def normalize_controller!
           if controller
-            if controller.start_with?("/")
-              @options[:controller] = controller[1..-1]
-            else
-              @options[:controller] = controller
-            end
+            @options[:controller] = if controller.start_with?('/')
+                                      controller[1..-1]
+                                    else
+                                      controller
+                                    end
           end
         end
 
@@ -742,17 +738,19 @@ module ActionDispatch
 
         def different_controller?
           return false unless current_controller
+
           controller.to_param != current_controller.to_param
         end
 
         private
-          def named_route_exists?
-            named_route && set.named_routes[named_route]
-          end
 
-          def segment_keys
-            set.named_routes[named_route].segment_keys
-          end
+        def named_route_exists?
+          named_route && set.named_routes[named_route]
+        end
+
+        def segment_keys
+          set.named_routes[named_route].segment_keys
+        end
       end
 
       # Generate the path indicated by the arguments, and return an array of
@@ -762,9 +760,7 @@ module ActionDispatch
       end
 
       def generate_extras(options, recall = {})
-        if recall
-          options = options.merge(_recall: recall)
-        end
+        options = options.merge(_recall: recall) if recall
 
         route_name = options.delete :use_route
         generator = generate(route_name, options, recall)
@@ -772,21 +768,21 @@ module ActionDispatch
         [URI(path_info).path, generator.params.except(:_recall).keys]
       end
 
-      def generate(route_name, options, recall = {}, method_name = nil)
+      def generate(route_name, options, recall = {}, _method_name = nil)
         Generator.new(route_name, options, recall, self).generate
       end
       private :generate
 
-      RESERVED_OPTIONS = [:host, :protocol, :port, :subdomain, :domain, :tld_length,
-                          :trailing_slash, :anchor, :params, :only_path, :script_name,
-                          :original_script_name, :relative_url_root]
+      RESERVED_OPTIONS = %i[host protocol port subdomain domain tld_length
+                            trailing_slash anchor params only_path script_name
+                            original_script_name relative_url_root]
 
       def optimize_routes_generation?
         default_url_options.empty?
       end
 
       def find_script_name(options)
-        options.delete(:script_name) || find_relative_url_root(options) || ""
+        options.delete(:script_name) || find_relative_url_root(options) || ''
       end
 
       def find_relative_url_root(options)
@@ -804,7 +800,7 @@ module ActionDispatch
         user = password = nil
 
         if options[:user] && options[:password]
-          user     = options.delete :user
+          user = options.delete :user
           password = options.delete :password
         end
 
@@ -813,9 +809,7 @@ module ActionDispatch
         original_script_name = options.delete(:original_script_name)
         script_name = find_script_name options
 
-        if original_script_name
-          script_name = original_script_name + script_name
-        end
+        script_name = original_script_name + script_name if original_script_name
 
         path_options = options.dup
         reserved.each { |ro| path_options.delete ro }
@@ -823,9 +817,7 @@ module ActionDispatch
         route_with_params = generate(route_name, path_options, recall)
         path = route_with_params.path(method_name)
 
-        if options[:trailing_slash] && !options[:format] && !path.end_with?("/")
-          path += "/"
-        end
+        path += '/' if options[:trailing_slash] && !options[:format] && !path.end_with?('/')
 
         params = route_with_params.params
 
@@ -837,11 +829,11 @@ module ActionDispatch
           end
         end
 
-        options[:path]        = path
+        options[:path] = path
         options[:script_name] = script_name
-        options[:params]      = params
-        options[:user]        = user
-        options[:password]    = password
+        options[:params] = params
+        options[:user] = user
+        options[:password] = password
 
         url_strategy.call options
       end
@@ -853,12 +845,12 @@ module ActionDispatch
       end
 
       def recognize_path(path, environment = {})
-        method = (environment[:method] || "GET").to_s.upcase
+        method = (environment[:method] || 'GET').to_s.upcase
         path = Journey::Router::Utils.normalize_path(path) unless %r{://}.match?(path)
         extras = environment[:extras] || {}
 
         begin
-          env = Rack::MockRequest.env_for(path, method: method)
+          env = Rack::MockRequest.env_for(path, method:)
         rescue URI::InvalidURIError => e
           raise ActionController::RoutingError, e.message
         end
@@ -882,19 +874,19 @@ module ActionDispatch
             begin
               req.controller_class
             rescue NameError
-              raise ActionController::RoutingError, "A route matches #{path.inspect}, but references missing controller: #{params[:controller].camelize}Controller"
+              raise ActionController::RoutingError,
+                    "A route matches #{path.inspect}, but references missing controller: #{params[:controller].camelize}Controller"
             end
 
             return req.path_parameters
           elsif app.matches?(req) && app.engine?
-            path_parameters = app.rack_app.routes.recognize_path_with_request(req, path, extras, raise_on_missing: false)
+            path_parameters = app.rack_app.routes.recognize_path_with_request(req, path, extras,
+                                                                              raise_on_missing: false)
             return path_parameters if path_parameters
           end
         end
 
-        if raise_on_missing
-          raise ActionController::RoutingError, "No route matches #{path.inspect}"
-        end
+        raise ActionController::RoutingError, "No route matches #{path.inspect}" if raise_on_missing
       end
     end
     # :startdoc:

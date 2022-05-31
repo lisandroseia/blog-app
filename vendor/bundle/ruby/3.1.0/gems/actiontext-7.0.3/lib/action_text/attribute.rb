@@ -45,9 +45,9 @@ module ActionText
           end
         CODE
 
-        rich_text_class_name = encrypted ? "ActionText::EncryptedRichText" : "ActionText::RichText"
-        has_one :"rich_text_#{name}", -> { where(name: name) },
-          class_name: rich_text_class_name, as: :record, inverse_of: :record, autosave: true, dependent: :destroy
+        rich_text_class_name = encrypted ? 'ActionText::EncryptedRichText' : 'ActionText::RichText'
+        has_one :"rich_text_#{name}", -> { where(name:) },
+                class_name: rich_text_class_name, as: :record, inverse_of: :record, autosave: true, dependent: :destroy
 
         scope :"with_rich_text_#{name}", -> { includes("rich_text_#{name}") }
         scope :"with_rich_text_#{name}_and_embeds", -> { includes("rich_text_#{name}": { embeds_attachments: :blob }) }
@@ -59,7 +59,7 @@ module ActionText
       end
 
       def rich_text_association_names
-        reflect_on_all_associations(:has_one).collect(&:name).select { |n| n.start_with?("rich_text_") }
+        reflect_on_all_associations(:has_one).collect(&:name).select { |n| n.start_with?('rich_text_') }
       end
     end
   end

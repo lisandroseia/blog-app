@@ -16,7 +16,7 @@ module ActionDispatch
   # responds with <tt>403 Forbidden</tt>. The body of the response contains debug info
   # if +config.consider_all_requests_local+ is set to true, otherwise the body is empty.
   class HostAuthorization
-    ALLOWED_HOSTS_IN_DEVELOPMENT = [".localhost", IPAddr.new("0.0.0.0/0"), IPAddr.new("::/0")]
+    ALLOWED_HOSTS_IN_DEVELOPMENT = ['.localhost', IPAddr.new('0.0.0.0/0'), IPAddr.new('::/0')]
     PORT_REGEX = /(?::\d+)/ # :nodoc:
     IPV4_HOSTNAME = /(?<host>\d+\.\d+\.\d+\.\d+)#{PORT_REGEX}?/ # :nodoc:
     IPV6_HOSTNAME = /(?<host>[a-f0-9]*:[a-f0-9.:]+)/i # :nodoc:
@@ -24,7 +24,7 @@ module ActionDispatch
     VALID_IP_HOSTNAME = Regexp.union( # :nodoc:
       /\A#{IPV4_HOSTNAME}\z/,
       /\A#{IPV6_HOSTNAME}\z/,
-      /\A#{IPV6_HOSTNAME_WITH_PORT}\z/,
+      /\A#{IPV6_HOSTNAME_WITH_PORT}\z/
     )
 
     class Permissions # :nodoc:
@@ -41,7 +41,7 @@ module ActionDispatch
           if allowed.is_a?(IPAddr)
             begin
               allowed === extract_hostname(host)
-            rescue
+            rescue StandardError
               # IPAddr#=== raises an error if you give it a hostname instead of
               # IP. Treat similar errors as blocked access.
               false
@@ -53,31 +53,32 @@ module ActionDispatch
       end
 
       private
-        def sanitize_hosts(hosts)
-          Array(hosts).map do |host|
-            case host
-            when Regexp then sanitize_regexp(host)
-            when String then sanitize_string(host)
-            else host
-            end
+
+      def sanitize_hosts(hosts)
+        Array(hosts).map do |host|
+          case host
+          when Regexp then sanitize_regexp(host)
+          when String then sanitize_string(host)
+          else host
           end
         end
+      end
 
-        def sanitize_regexp(host)
-          /\A#{host}#{PORT_REGEX}?\z/
-        end
+      def sanitize_regexp(host)
+        /\A#{host}#{PORT_REGEX}?\z/
+      end
 
-        def sanitize_string(host)
-          if host.start_with?(".")
-            /\A([a-z0-9-]+\.)?#{Regexp.escape(host[1..-1])}#{PORT_REGEX}?\z/i
-          else
-            /\A#{Regexp.escape host}#{PORT_REGEX}?\z/i
-          end
+      def sanitize_string(host)
+        if host.start_with?('.')
+          /\A([a-z0-9-]+\.)?#{Regexp.escape(host[1..-1])}#{PORT_REGEX}?\z/i
+        else
+          /\A#{Regexp.escape host}#{PORT_REGEX}?\z/i
         end
+      end
 
-        def extract_hostname(host)
-          host.slice(VALID_IP_HOSTNAME, "host") || host
-        end
+      def extract_hostname(host)
+        host.slice(VALID_IP_HOSTNAME, 'host') || host
+      end
     end
 
     class DefaultResponseApp # :nodoc:
@@ -85,38 +86,39 @@ module ActionDispatch
 
       def call(env)
         request = Request.new(env)
-        format = request.xhr? ? "text/plain" : "text/html"
+        format = request.xhr? ? 'text/plain' : 'text/html'
 
         log_error(request)
         response(format, response_body(request))
       end
 
       private
-        def response_body(request)
-          return "" unless request.get_header("action_dispatch.show_detailed_exceptions")
 
-          template = DebugView.new(host: request.host)
-          template.render(template: "rescues/blocked_host", layout: "rescues/layout")
-        end
+      def response_body(request)
+        return '' unless request.get_header('action_dispatch.show_detailed_exceptions')
 
-        def response(format, body)
-          [RESPONSE_STATUS,
-           { "Content-Type" => "#{format}; charset=#{Response.default_charset}",
-             "Content-Length" => body.bytesize.to_s },
-           [body]]
-        end
+        template = DebugView.new(host: request.host)
+        template.render(template: 'rescues/blocked_host', layout: 'rescues/layout')
+      end
 
-        def log_error(request)
-          logger = available_logger(request)
+      def response(format, body)
+        [RESPONSE_STATUS,
+         { 'Content-Type' => "#{format}; charset=#{Response.default_charset}",
+           'Content-Length' => body.bytesize.to_s },
+         [body]]
+      end
 
-          return unless logger
+      def log_error(request)
+        logger = available_logger(request)
 
-          logger.error("[#{self.class.name}] Blocked host: #{request.host}")
-        end
+        return unless logger
 
-        def available_logger(request)
-          request.logger || ActionView::Base.logger
-        end
+        logger.error("[#{self.class.name}] Blocked host: #{request.host}")
+      end
+
+      def available_logger(request)
+        request.logger || ActionView::Base.logger
+      end
     end
 
     def initialize(app, hosts, exclude: nil, response_app: nil)
@@ -141,19 +143,20 @@ module ActionDispatch
     end
 
     private
-      def authorized?(request)
-        origin_host = request.get_header("HTTP_HOST")
-        forwarded_host = request.x_forwarded_host&.split(/,\s?/)&.last
 
-        @permissions.allows?(origin_host) && (forwarded_host.blank? || @permissions.allows?(forwarded_host))
-      end
+    def authorized?(request)
+      origin_host = request.get_header('HTTP_HOST')
+      forwarded_host = request.x_forwarded_host&.split(/,\s?/)&.last
 
-      def excluded?(request)
-        @exclude && @exclude.call(request)
-      end
+      @permissions.allows?(origin_host) && (forwarded_host.blank? || @permissions.allows?(forwarded_host))
+    end
 
-      def mark_as_authorized(request)
-        request.set_header("action_dispatch.authorized_host", request.host)
-      end
+    def excluded?(request)
+      @exclude && @exclude.call(request)
+    end
+
+    def mark_as_authorized(request)
+      request.set_header('action_dispatch.authorized_host', request.host)
+    end
   end
 end

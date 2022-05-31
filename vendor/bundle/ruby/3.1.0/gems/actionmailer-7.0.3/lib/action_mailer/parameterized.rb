@@ -104,22 +104,24 @@ module ActionMailer
 
     class Mailer # :nodoc:
       def initialize(mailer, params)
-        @mailer, @params = mailer, params
+        @mailer = mailer
+        @params = params
       end
 
       private
-        def method_missing(method_name, *args)
-          if @mailer.action_methods.include?(method_name.to_s)
-            ActionMailer::Parameterized::MessageDelivery.new(@mailer, method_name, @params, *args)
-          else
-            super
-          end
-        end
-        ruby2_keywords(:method_missing)
 
-        def respond_to_missing?(method, include_all = false)
-          @mailer.respond_to?(method, include_all)
+      def method_missing(method_name, *args)
+        if @mailer.action_methods.include?(method_name.to_s)
+          ActionMailer::Parameterized::MessageDelivery.new(@mailer, method_name, @params, *args)
+        else
+          super
         end
+      end
+      ruby2_keywords(:method_missing)
+
+      def respond_to_missing?(method, include_all = false)
+        @mailer.respond_to?(method, include_all)
+      end
     end
 
     class MessageDelivery < ActionMailer::MessageDelivery # :nodoc:
@@ -130,21 +132,23 @@ module ActionMailer
       ruby2_keywords(:initialize)
 
       private
-        def processed_mailer
-          @processed_mailer ||= @mailer_class.new.tap do |mailer|
-            mailer.params = @params
-            mailer.process @action, *@args
-          end
-        end
 
-        def enqueue_delivery(delivery_method, options = {})
-          if processed?
-            super
-          else
-            @mailer_class.delivery_job.set(options).perform_later(
-              @mailer_class.name, @action.to_s, delivery_method.to_s, params: @params, args: @args)
-          end
+      def processed_mailer
+        @processed_mailer ||= @mailer_class.new.tap do |mailer|
+          mailer.params = @params
+          mailer.process @action, *@args
         end
+      end
+
+      def enqueue_delivery(delivery_method, options = {})
+        if processed?
+          super
+        else
+          @mailer_class.delivery_job.set(options).perform_later(
+            @mailer_class.name, @action.to_s, delivery_method.to_s, params: @params, args: @args
+          )
+        end
+      end
     end
   end
 end

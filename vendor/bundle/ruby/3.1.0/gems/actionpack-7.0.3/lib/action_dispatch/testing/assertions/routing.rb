@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "uri"
-require "active_support/core_ext/hash/indifferent_access"
-require "active_support/core_ext/string/access"
-require "action_controller/metal/exceptions"
+require 'uri'
+require 'active_support/core_ext/hash/indifferent_access'
+require 'active_support/core_ext/string/access'
+require 'action_controller/metal/exceptions'
 
 module ActionDispatch
   module Assertions
@@ -45,9 +45,9 @@ module ActionDispatch
       #   # Test a custom route
       #   assert_recognizes({controller: 'items', action: 'show', id: '1'}, 'view/item1')
       def assert_recognizes(expected_options, path, extras = {}, msg = nil)
-        if path.is_a?(Hash) && path[:method].to_s == "all"
-          [:get, :post, :put, :delete].each do |method|
-            assert_recognizes(expected_options, path.merge(method: method), extras, msg)
+        if path.is_a?(Hash) && path[:method].to_s == 'all'
+          %i[get post put delete].each do |method|
+            assert_recognizes(expected_options, path.merge(method:), extras, msg)
           end
         else
           request = recognized_request_for(path, extras, msg)
@@ -56,10 +56,10 @@ module ActionDispatch
 
           expected_options.stringify_keys!
 
-          msg = message(msg, "") {
-            sprintf("The recognized options <%s> did not match <%s>, difference:",
-                    request.path_parameters, expected_options)
-          }
+          msg = message(msg, '') do
+            format('The recognized options <%s> did not match <%s>, difference:',
+                   request.path_parameters, expected_options)
+          end
 
           assert_equal(expected_options, request.path_parameters, msg)
         end
@@ -86,21 +86,21 @@ module ActionDispatch
         if %r{://}.match?(expected_path)
           fail_on(URI::InvalidURIError, message) do
             uri = URI.parse(expected_path)
-            expected_path = uri.path.to_s.empty? ? "/" : uri.path
+            expected_path = uri.path.to_s.empty? ? '/' : uri.path
           end
         else
-          expected_path = "/#{expected_path}" unless expected_path.start_with?("/")
+          expected_path = "/#{expected_path}" unless expected_path.start_with?('/')
         end
 
         options = options.clone
         generated_path, query_string_keys = @routes.generate_extras(options, defaults)
-        found_extras = options.reject { |k, _| ! query_string_keys.include? k }
+        found_extras = options.reject { |k, _| !query_string_keys.include? k }
 
-        msg = message || sprintf("found extras <%s>, not <%s>", found_extras, extras)
+        msg = message || format('found extras <%s>, not <%s>', found_extras, extras)
         assert_equal(extras, found_extras, msg)
 
-        msg = message || sprintf("The generated path <%s> did not match <%s>", generated_path,
-            expected_path)
+        msg = message || format('The generated path <%s> did not match <%s>', generated_path,
+                                expected_path)
         assert_equal(expected_path, generated_path, msg)
       end
 
@@ -128,8 +128,9 @@ module ActionDispatch
       def assert_routing(path, options, defaults = {}, extras = {}, message = nil)
         assert_recognizes(options, path, extras, message)
 
-        controller, default_controller = options[:controller], defaults[:controller]
-        if controller && controller.include?(?/) && default_controller && default_controller.include?(?/)
+        controller = options[:controller]
+        default_controller = defaults[:controller]
+        if controller && controller.include?('/') && default_controller && default_controller.include?('/')
           options[:controller] = "/#{controller}"
         end
 
@@ -151,9 +152,11 @@ module ActionDispatch
       #   end
       #
       def with_routing
-        old_routes, @routes = @routes, ActionDispatch::Routing::RouteSet.new
+        old_routes = @routes
+        @routes = ActionDispatch::Routing::RouteSet.new
         if defined?(@controller) && @controller
-          old_controller, @controller = @controller, @controller.clone
+          old_controller = @controller
+          @controller = @controller.clone
           _routes = @routes
 
           @controller.singleton_class.include(_routes.url_helpers)
@@ -163,26 +166,24 @@ module ActionDispatch
               include _routes.url_helpers
             end
 
-            custom_view_context = Module.new {
+            custom_view_context = Module.new do
               define_method(:view_context_class) do
                 view_context_class
               end
-            }
+            end
             @controller.extend(custom_view_context)
           end
         end
         yield @routes
       ensure
         @routes = old_routes
-        if defined?(@controller) && @controller
-          @controller = old_controller
-        end
+        @controller = old_controller if defined?(@controller) && @controller
       end
 
       # ROUTES TODO: These assertions should really work in an integration context
-      def method_missing(selector, *args, &block)
+      def method_missing(selector, *args, &)
         if defined?(@controller) && @controller && defined?(@routes) && @routes && @routes.named_routes.route_defined?(selector)
-          @controller.public_send(selector, *args, &block)
+          @controller.public_send(selector, *args, &)
         else
           super
         end
@@ -190,46 +191,47 @@ module ActionDispatch
       ruby2_keywords(:method_missing)
 
       private
-        # Recognizes the route for a given path.
-        def recognized_request_for(path, extras = {}, msg)
-          if path.is_a?(Hash)
-            method = path[:method]
-            path   = path[:path]
-          else
-            method = :get
-          end
 
-          controller = @controller if defined?(@controller)
-          request = ActionController::TestRequest.create controller&.class
-
-          if %r{://}.match?(path)
-            fail_on(URI::InvalidURIError, msg) do
-              uri = URI.parse(path)
-              request.env["rack.url_scheme"] = uri.scheme || "http"
-              request.host = uri.host if uri.host
-              request.port = uri.port if uri.port
-              request.path = uri.path.to_s.empty? ? "/" : uri.path
-            end
-          else
-            path = "/#{path}" unless path.start_with?("/")
-            request.path = path
-          end
-
-          request.request_method = method if method
-
-          params = fail_on(ActionController::RoutingError, msg) do
-            @routes.recognize_path(path, method: method, extras: extras)
-          end
-          request.path_parameters = params.with_indifferent_access
-
-          request
+      # Recognizes the route for a given path.
+      def recognized_request_for(path, extras = {}, msg)
+        if path.is_a?(Hash)
+          method = path[:method]
+          path = path[:path]
+        else
+          method = :get
         end
 
-        def fail_on(exception_class, message)
-          yield
-        rescue exception_class => e
-          raise Minitest::Assertion, message || e.message
+        controller = @controller if defined?(@controller)
+        request = ActionController::TestRequest.create controller&.class
+
+        if %r{://}.match?(path)
+          fail_on(URI::InvalidURIError, msg) do
+            uri = URI.parse(path)
+            request.env['rack.url_scheme'] = uri.scheme || 'http'
+            request.host = uri.host if uri.host
+            request.port = uri.port if uri.port
+            request.path = uri.path.to_s.empty? ? '/' : uri.path
+          end
+        else
+          path = "/#{path}" unless path.start_with?('/')
+          request.path = path
         end
+
+        request.request_method = method if method
+
+        params = fail_on(ActionController::RoutingError, msg) do
+          @routes.recognize_path(path, method:, extras:)
+        end
+        request.path_parameters = params.with_indifferent_access
+
+        request
+      end
+
+      def fail_on(exception_class, message)
+        yield
+      rescue exception_class => e
+        raise Minitest::Assertion, message || e.message
+      end
     end
   end
 end

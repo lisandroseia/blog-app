@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "tmpdir"
+require 'tmpdir'
 
 module ActionMailer
   # This module handles everything related to mail delivery, from registering
@@ -18,20 +18,20 @@ module ActionMailer
       class_attribute :delivery_method, default: :smtp
 
       add_delivery_method :smtp, Mail::SMTP,
-        address:              "localhost",
-        port:                 25,
-        domain:               "localhost.localdomain",
-        user_name:            nil,
-        password:             nil,
-        authentication:       nil,
-        enable_starttls_auto: true
+                          address: 'localhost',
+                          port: 25,
+                          domain: 'localhost.localdomain',
+                          user_name: nil,
+                          password: nil,
+                          authentication: nil,
+                          enable_starttls_auto: true
 
       add_delivery_method :file, Mail::FileDelivery,
-        location: defined?(Rails.root) ? "#{Rails.root}/tmp/mails" : "#{Dir.tmpdir}/mails"
+                          location: defined?(Rails.root) ? "#{Rails.root}/tmp/mails" : "#{Dir.tmpdir}/mails"
 
       add_delivery_method :sendmail, Mail::Sendmail,
-        location:  "/usr/sbin/sendmail",
-        arguments: "-i"
+                          location: '/usr/sbin/sendmail',
+                          arguments: '-i'
 
       add_delivery_method :test, Mail::TestMailer
     end
@@ -59,7 +59,7 @@ module ActionMailer
 
         case method
         when NilClass
-          raise "Delivery method cannot be nil"
+          raise 'Delivery method cannot be nil'
         when Symbol
           if klass = delivery_methods[method]
             mail.delivery_method(klass, (send(:"#{method}_settings") || {}).merge(options || {}))
@@ -70,7 +70,7 @@ module ActionMailer
           mail.delivery_method(method)
         end
 
-        mail.perform_deliveries    = perform_deliveries
+        mail.perform_deliveries = perform_deliveries
         mail.raise_delivery_errors = raise_delivery_errors
       end
     end

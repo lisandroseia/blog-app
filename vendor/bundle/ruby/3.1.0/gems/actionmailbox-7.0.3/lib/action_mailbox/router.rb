@@ -17,7 +17,7 @@ module ActionMailbox
     end
 
     def add_route(address, to:)
-      routes.append Route.new(address, to: to)
+      routes.append Route.new(address, to:)
     end
 
     def route(inbound_email)
@@ -35,8 +35,9 @@ module ActionMailbox
     end
 
     private
-      attr_reader :routes
+
+    attr_reader :routes
   end
 end
 
-require "action_mailbox/router/route"
+require 'action_mailbox/router/route'

@@ -110,7 +110,7 @@ module ActionController
       #   # => ["application", "chart", "rubygems"]
       def all_helpers_from_path(path)
         helpers = Array(path).flat_map do |_path|
-          names = Dir["#{_path}/**/*_helper.rb"].map { |file| file[_path.to_s.size + 1..-"_helper.rb".size - 1] }
+          names = Dir["#{_path}/**/*_helper.rb"].map { |file| file[_path.to_s.size + 1..-'_helper.rb'.size - 1] }
           names.sort!
         end
         helpers.uniq!
@@ -118,10 +118,11 @@ module ActionController
       end
 
       private
-        # Extract helper names from files in <tt>app/helpers/**/*_helper.rb</tt>
-        def all_application_helpers
-          all_helpers_from_path(helpers_path)
-        end
+
+      # Extract helper names from files in <tt>app/helpers/**/*_helper.rb</tt>
+      def all_application_helpers
+        all_helpers_from_path(helpers_path)
+      end
     end
 
     # Provides a proxy to access helper methods from outside the view.

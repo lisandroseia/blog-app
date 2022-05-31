@@ -1,15 +1,15 @@
 # frozen_string_literal: true
 
-gem "capybara", ">= 3.26"
+gem 'capybara', '>= 3.26'
 
-require "capybara/dsl"
-require "capybara/minitest"
-require "action_controller"
-require "action_dispatch/system_testing/driver"
-require "action_dispatch/system_testing/browser"
-require "action_dispatch/system_testing/server"
-require "action_dispatch/system_testing/test_helpers/screenshot_helper"
-require "action_dispatch/system_testing/test_helpers/setup_and_teardown"
+require 'capybara/dsl'
+require 'capybara/minitest'
+require 'action_controller'
+require 'action_dispatch/system_testing/driver'
+require 'action_dispatch/system_testing/browser'
+require 'action_dispatch/system_testing/server'
+require 'action_dispatch/system_testing/test_helpers/screenshot_helper'
+require 'action_dispatch/system_testing/test_helpers/setup_and_teardown'
 
 module ActionDispatch
   # = System Testing
@@ -115,7 +115,7 @@ module ActionDispatch
     include SystemTesting::TestHelpers::SetupAndTeardown
     include SystemTesting::TestHelpers::ScreenshotHelper
 
-    DEFAULT_HOST = "http://127.0.0.1"
+    DEFAULT_HOST = 'http://127.0.0.1'
 
     def initialize(*) # :nodoc:
       super
@@ -125,7 +125,7 @@ module ActionDispatch
 
     def self.start_application # :nodoc:
       Capybara.app = Rack::Builder.new do
-        map "/" do
+        map '/' do
           run Rails.application
         end
       end
@@ -154,41 +154,42 @@ module ActionDispatch
     #
     #   driven_by :selenium, using: :headless_firefox
     def self.driven_by(driver, using: :chrome, screen_size: [1400, 1400], options: {}, &capabilities)
-      driver_options = { using: using, screen_size: screen_size, options: options }
+      driver_options = { using:, screen_size:, options: }
 
       self.driver = SystemTesting::Driver.new(driver, **driver_options, &capabilities)
     end
 
     private
-      def url_helpers
-        @url_helpers ||=
-          if ActionDispatch.test_app
-            Class.new do
-              include ActionDispatch.test_app.routes.url_helpers
-              include ActionDispatch.test_app.routes.mounted_helpers
 
-              def url_options
-                default_url_options.reverse_merge(host: app_host)
-              end
+    def url_helpers
+      @url_helpers ||=
+        if ActionDispatch.test_app
+          Class.new do
+            include ActionDispatch.test_app.routes.url_helpers
+            include ActionDispatch.test_app.routes.mounted_helpers
 
-              def app_host
-                Capybara.app_host || Capybara.current_session.server_url || DEFAULT_HOST
-              end
-            end.new
-          end
-      end
+            def url_options
+              default_url_options.reverse_merge(host: app_host)
+            end
 
-      def method_missing(name, *args, &block)
-        if url_helpers.respond_to?(name)
-          url_helpers.public_send(name, *args, &block)
-        else
-          super
+            def app_host
+              Capybara.app_host || Capybara.current_session.server_url || DEFAULT_HOST
+            end
+          end.new
         end
-      end
+    end
 
-      def respond_to_missing?(name, include_private = false)
-        url_helpers.respond_to?(name)
+    def method_missing(name, *args, &)
+      if url_helpers.respond_to?(name)
+        url_helpers.public_send(name, *args, &)
+      else
+        super
       end
+    end
+
+    def respond_to_missing?(name, _include_private = false)
+      url_helpers.respond_to?(name)
+    end
   end
 end
 

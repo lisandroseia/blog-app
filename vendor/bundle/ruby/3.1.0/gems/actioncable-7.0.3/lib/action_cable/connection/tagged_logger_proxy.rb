@@ -18,25 +18,26 @@ module ActionCable
         @tags = @tags.uniq
       end
 
-      def tag(logger, &block)
+      def tag(logger, &)
         if logger.respond_to?(:tagged)
           current_tags = tags - logger.formatter.current_tags
-          logger.tagged(*current_tags, &block)
+          logger.tagged(*current_tags, &)
         else
           yield
         end
       end
 
-      %i( debug info warn error fatal unknown ).each do |severity|
+      %i[debug info warn error fatal unknown].each do |severity|
         define_method(severity) do |message|
           log severity, message
         end
       end
 
       private
-        def log(type, message) # :doc:
-          tag(@logger) { @logger.send type, message }
-        end
+
+      def log(type, message) # :doc:
+        tag(@logger) { @logger.send type, message }
+      end
     end
   end
 end

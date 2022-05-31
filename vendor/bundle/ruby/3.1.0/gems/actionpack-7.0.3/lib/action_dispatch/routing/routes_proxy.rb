@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/array/extract_options"
+require 'active_support/core_ext/array/extract_options'
 
 module ActionDispatch
   module Routing
@@ -8,10 +8,11 @@ module ActionDispatch
       include ActionDispatch::Routing::UrlFor
 
       attr_accessor :scope, :routes
-      alias :_routes :routes
+      alias _routes routes
 
       def initialize(routes, scope, helpers, script_namer = nil)
-        @routes, @scope = routes, scope
+        @routes = routes
+        @scope = scope
         @helpers = helpers
         @script_namer = script_namer
       end
@@ -22,7 +23,8 @@ module ActionDispatch
         end
       end
 
-    private
+      private
+
       def respond_to_missing?(method, _)
         super || @helpers.respond_to?(method)
       end
@@ -58,11 +60,11 @@ module ActionDispatch
       def merge_script_names(previous_script_name, new_script_name)
         return new_script_name unless previous_script_name
 
-        resolved_parts = new_script_name.count("/")
-        previous_parts = previous_script_name.count("/")
+        resolved_parts = new_script_name.count('/')
+        previous_parts = previous_script_name.count('/')
         context_parts = previous_parts - resolved_parts + 1
 
-        (previous_script_name.split("/").slice(0, context_parts).join("/")) + new_script_name
+        previous_script_name.split('/').slice(0, context_parts).join('/') + new_script_name
       end
     end
   end

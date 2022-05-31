@@ -7,13 +7,11 @@ module ActionCable
         extend ActiveSupport::Concern
 
         included do
-          if defined?(ActiveRecord::Base)
-            set_callback :work, :around, :with_database_connections
-          end
+          set_callback :work, :around, :with_database_connections if defined?(ActiveRecord::Base)
         end
 
-        def with_database_connections(&block)
-          connection.logger.tag(ActiveRecord::Base.logger, &block)
+        def with_database_connections(&)
+          connection.logger.tag(ActiveRecord::Base.logger, &)
         end
       end
     end

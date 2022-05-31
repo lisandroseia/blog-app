@@ -1,17 +1,15 @@
-# frozen_string_literal: true
-
-require "active_support"
-require "active_support/test_case"
-require "active_support/core_ext/hash/indifferent_access"
-require "json"
+require 'active_support'
+require 'active_support/test_case'
+require 'active_support/core_ext/hash/indifferent_access'
+require 'json'
 
 module ActionCable
   module Channel
     class NonInferrableChannelError < ::StandardError
       def initialize(name)
-        super "Unable to determine the channel to test from #{name}. " +
-          "You'll need to specify it using `tests YourChannel` in your " +
-          "test case definition."
+        super "Unable to determine the channel to test from #{name}. " \
+              "You'll need to specify it using `tests YourChannel` in your " \
+              'test case definition.'
       end
     end
 
@@ -68,15 +66,16 @@ module ActionCable
       end
 
       private
-        def connection_gid(ids)
-          ids.map do |o|
-            if o.respond_to?(:to_gid_param)
-              o.to_gid_param
-            else
-              o.to_s
-            end
-          end.sort.join(":")
-        end
+
+      def connection_gid(ids)
+        ids.map do |o|
+          if o.respond_to?(:to_gid_param)
+            o.to_gid_param
+          else
+            o.to_s
+          end
+        end.sort.join(':')
+      end
     end
 
     # Superclass for Action Cable channel functional tests.
@@ -185,7 +184,7 @@ module ActionCable
         include ActiveSupport::Testing::ConstantLookup
         include ActionCable::TestHelper
 
-        CHANNEL_IDENTIFIER = "test_stub"
+        CHANNEL_IDENTIFIER = 'test_stub'.freeze
 
         included do
           class_attribute :_channel_class
@@ -203,12 +202,12 @@ module ActionCable
             when Module
               self._channel_class = channel
             else
-              raise NonInferrableChannelError.new(channel)
+              raise NonInferrableChannelError, channel
             end
           end
 
           def channel_class
-            if channel = self._channel_class
+            if channel = _channel_class
               channel
             else
               tests determine_default_channel(name)
@@ -217,9 +216,10 @@ module ActionCable
 
           def determine_default_channel(name)
             channel = determine_constant_from_test_name(name) do |constant|
-              Class === constant && constant < ActionCable::Channel::Base
+              constant.is_a?(Class) && constant < ActionCable::Channel::Base
             end
-            raise NonInferrableChannelError.new(name) if channel.nil?
+            raise NonInferrableChannelError, name if channel.nil?
+
             channel
           end
         end
@@ -255,13 +255,13 @@ module ActionCable
         # NOTE: Must be subscribed.
         def perform(action, data = {})
           check_subscribed!
-          subscription.perform_action(data.stringify_keys.merge("action" => action.to_s))
+          subscription.perform_action(data.stringify_keys.merge('action' => action.to_s))
         end
 
         # Returns messages transmitted into channel
         def transmissions
           # Return only directly sent message (via #transmit)
-          connection.transmissions.filter_map { |data| data["message"] }
+          connection.transmissions.filter_map { |data| data['message'] }
         end
 
         # Enhance TestHelper assertions to handle non-String
@@ -308,15 +308,16 @@ module ActionCable
         end
 
         private
-          def check_subscribed!
-            raise "Must be subscribed!" if subscription.nil? || subscription.rejected?
-          end
 
-          def broadcasting_for(stream_or_object)
-            return stream_or_object if stream_or_object.is_a?(String)
+        def check_subscribed!
+          raise 'Must be subscribed!' if subscription.nil? || subscription.rejected?
+        end
 
-            self.class.channel_class.broadcasting_for(stream_or_object)
-          end
+        def broadcasting_for(stream_or_object)
+          return stream_or_object if stream_or_object.is_a?(String)
+
+          self.class.channel_class.broadcasting_for(stream_or_object)
+        end
       end
 
       include Behavior

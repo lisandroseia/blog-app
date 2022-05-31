@@ -4,7 +4,7 @@ module ActionDispatch
   module Http
     class ContentDisposition # :nodoc:
       def self.format(disposition:, filename:)
-        new(disposition: disposition, filename: filename).to_s
+        new(disposition:, filename:).to_s
       end
 
       attr_reader :disposition, :filename
@@ -35,11 +35,12 @@ module ActionDispatch
       end
 
       private
-        def percent_escape(string, pattern)
-          string.gsub(pattern) do |char|
-            char.bytes.map { |byte| "%%%02X" % byte }.join
-          end
+
+      def percent_escape(string, pattern)
+        string.gsub(pattern) do |char|
+          char.bytes.map { |byte| '%%%02X' % byte }.join
         end
+      end
     end
   end
 end

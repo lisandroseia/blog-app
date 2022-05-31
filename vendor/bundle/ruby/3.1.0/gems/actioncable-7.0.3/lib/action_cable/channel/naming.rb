@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 module ActionCable
   module Channel
     module Naming
@@ -14,7 +12,7 @@ module ActionCable
         #   Chats::AppearancesChannel.channel_name # => 'chats:appearances'
         #   FooChats::BarAppearancesChannel.channel_name # => 'foo_chats:bar_appearances'
         def channel_name
-          @channel_name ||= name.delete_suffix("Channel").gsub("::", ":").underscore
+          @channel_name ||= name.delete_suffix('Channel').gsub('::', ':').underscore
         end
       end
 

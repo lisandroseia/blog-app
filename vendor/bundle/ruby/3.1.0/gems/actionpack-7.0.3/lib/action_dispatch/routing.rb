@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/string/filters"
+require 'active_support/core_ext/string/filters'
 
 module ActionDispatch
   # The routing module provides URL rewriting in native Ruby. It's a way to
@@ -254,7 +254,7 @@ module ActionDispatch
     autoload :UrlFor
     autoload :PolymorphicRoutes
 
-    SEPARATORS = %w( / . ? ) # :nodoc:
-    HTTP_METHODS = [:get, :head, :post, :patch, :put, :delete, :options] # :nodoc:
+    SEPARATORS = %w[/ . ?] # :nodoc:
+    HTTP_METHODS = %i[get head post patch put delete options] # :nodoc:
   end
 end

@@ -1,24 +1,47 @@
-# README
+![](https://img.shields.io/badge/Microverse-blueviolet)
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+# Rails blogg
 
-Things you may want to cover:
+> In this project, I worked on a blog that acces to a database to display everything on the screen!
 
-* Ruby version
+## Built With
 
-* System dependencies
+- Ruby, Rails, Bundler
+- Git, Github, Rubocop
+- Postgresql
 
-* Configuration
+## Getting Started
 
-* Database creation
+To get a local copy up and running follow these simple example steps.
 
-* Database initialization
+### Prerequisites
 
-* How to run the test suite
+run "git clone https://github.com/lisandroseia/rails-blog.git"
+run "cd /rails-blog"
+run "bundle install" to install dependancies
 
-* Services (job queues, cache servers, search engines, etc.)
+### database prep
 
-* Deployment instructions
+run "rails db:setup"
+### Run the app
 
-* ...
+Run "rails s" to start the aplication
+
+👤 **Lisandro Seia**
+
+ **GitHub**  | [@lisandroseia](https://github.com/lisandroseia)
+ **LinkdIn** | [LinkedIn](https://www.linkedin.com/in/lisandro-seia-295120225/)
+
+## 🤝 Contributing
+
+Contributions, issues, and feature requests are welcome!
+
+Feel free to check the [issues page](../../issues/).
+
+## Show your support
+
+Give a ⭐️ if you like this project!
+
+## 📝 License
+
+This project is [MIT](./MIT.md) licensed.

@@ -40,37 +40,38 @@ module ActionDispatch
       end
 
       private
-        def initialize_options
-          @options ||=
-            case type
-            when :chrome
-              ::Selenium::WebDriver::Chrome::Options.new
-            when :firefox
-              ::Selenium::WebDriver::Firefox::Options.new
-            end
-        end
 
-        def set_default_options
-          case name
-          when :headless_chrome
-            set_headless_chrome_browser_options
-          when :headless_firefox
-            set_headless_firefox_browser_options
+      def initialize_options
+        @options ||=
+          case type
+          when :chrome
+            ::Selenium::WebDriver::Chrome::Options.new
+          when :firefox
+            ::Selenium::WebDriver::Firefox::Options.new
           end
-        end
+      end
 
-        def set_headless_chrome_browser_options
-          configure do |capabilities|
-            capabilities.add_argument("--headless")
-            capabilities.add_argument("--disable-gpu") if Gem.win_platform?
-          end
+      def set_default_options
+        case name
+        when :headless_chrome
+          set_headless_chrome_browser_options
+        when :headless_firefox
+          set_headless_firefox_browser_options
         end
+      end
 
-        def set_headless_firefox_browser_options
-          configure do |capabilities|
-            capabilities.add_argument("-headless")
-          end
+      def set_headless_chrome_browser_options
+        configure do |capabilities|
+          capabilities.add_argument('--headless')
+          capabilities.add_argument('--disable-gpu') if Gem.win_platform?
         end
+      end
+
+      def set_headless_firefox_browser_options
+        configure do |capabilities|
+          capabilities.add_argument('-headless')
+        end
+      end
     end
   end
 end

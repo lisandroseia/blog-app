@@ -70,7 +70,9 @@ module ActionView
       end
 
       def initialize(name, template, view_paths = nil)
-        @name, @template, @view_paths = name, template, view_paths
+        @name = name
+        @template = template
+        @view_paths = view_paths
       end
 
       def dependencies
@@ -81,74 +83,73 @@ module ActionView
       private :name, :template
 
       private
-        def source
-          template.source
+
+      def source
+        template.source
+      end
+
+      def directory
+        name.split('/')[0..-2].join('/')
+      end
+
+      def render_dependencies
+        render_dependencies = []
+        render_calls = source.split(/\brender\b/).drop(1)
+
+        render_calls.each do |arguments|
+          add_dependencies(render_dependencies, arguments, LAYOUT_DEPENDENCY)
+          add_dependencies(render_dependencies, arguments, RENDER_ARGUMENTS)
         end
 
-        def directory
-          name.split("/")[0..-2].join("/")
+        render_dependencies.uniq
+      end
+
+      def add_dependencies(render_dependencies, arguments, pattern)
+        arguments.scan(pattern) do
+          match = Regexp.last_match
+          add_dynamic_dependency(render_dependencies, match[:dynamic])
+          add_static_dependency(render_dependencies, match[:static], match[:quote])
+        end
+      end
+
+      def add_dynamic_dependency(dependencies, dependency)
+        dependencies << "#{dependency.pluralize}/#{dependency.singularize}" if dependency
+      end
+
+      def add_static_dependency(dependencies, dependency, quote_type)
+        if quote_type == '"' && dependency.include?('#{')
+          # Ignore if there is interpolation
+          return
         end
 
-        def render_dependencies
-          render_dependencies = []
-          render_calls = source.split(/\brender\b/).drop(1)
-
-          render_calls.each do |arguments|
-            add_dependencies(render_dependencies, arguments, LAYOUT_DEPENDENCY)
-            add_dependencies(render_dependencies, arguments, RENDER_ARGUMENTS)
-          end
-
-          render_dependencies.uniq
+        if dependency
+          dependencies << if dependency.include?('/')
+                            dependency
+                          else
+                            "#{directory}/#{dependency}"
+                          end
         end
+      end
 
-        def add_dependencies(render_dependencies, arguments, pattern)
-          arguments.scan(pattern) do
-            match = Regexp.last_match
-            add_dynamic_dependency(render_dependencies, match[:dynamic])
-            add_static_dependency(render_dependencies, match[:static], match[:quote])
-          end
-        end
+      def resolve_directories(wildcard_dependencies)
+        return [] unless @view_paths
+        return [] if wildcard_dependencies.empty?
 
-        def add_dynamic_dependency(dependencies, dependency)
-          if dependency
-            dependencies << "#{dependency.pluralize}/#{dependency.singularize}"
-          end
-        end
+        # Remove trailing "/*"
+        prefixes = wildcard_dependencies.map { |query| query[0..-3] }
 
-        def add_static_dependency(dependencies, dependency, quote_type)
-          if quote_type == '"'
-            # Ignore if there is interpolation
-            return if dependency.include?('#{')
-          end
+        @view_paths.flat_map(&:all_template_paths).uniq.filter_map do |path|
+          path.to_s if prefixes.include?(path.prefix)
+        end.sort
+      end
 
-          if dependency
-            if dependency.include?("/")
-              dependencies << dependency
-            else
-              dependencies << "#{directory}/#{dependency}"
-            end
-          end
-        end
+      def explicit_dependencies
+        dependencies = source.scan(EXPLICIT_DEPENDENCY).flatten.uniq
 
-        def resolve_directories(wildcard_dependencies)
-          return [] unless @view_paths
-          return [] if wildcard_dependencies.empty?
+        wildcards, explicits = dependencies.partition { |dependency| dependency.end_with?('/*') }
 
-          # Remove trailing "/*"
-          prefixes = wildcard_dependencies.map { |query| query[0..-3] }
-
-          @view_paths.flat_map(&:all_template_paths).uniq.filter_map { |path|
-            path.to_s if prefixes.include?(path.prefix)
-          }.sort
-        end
-
-        def explicit_dependencies
-          dependencies = source.scan(EXPLICIT_DEPENDENCY).flatten.uniq
-
-          wildcards, explicits = dependencies.partition { |dependency| dependency.end_with?("/*") }
-
-          (explicits + resolve_directories(wildcards)).uniq
-        end
+        (explicits + resolve_directories(wildcards)).uniq
+      end
     end
   end
 end

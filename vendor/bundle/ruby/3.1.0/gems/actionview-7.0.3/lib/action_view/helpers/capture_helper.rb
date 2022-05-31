@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/string/output_safety"
+require 'active_support/core_ext/string/output_safety'
 
 module ActionView
   # = Action View Capture Helper
@@ -152,11 +152,11 @@ module ActionView
       #   <% content_for :script, javascript_include_tag(:defaults) %>
       #
       # WARNING: <tt>content_for</tt> is ignored in caches. So you shouldn't use it for elements that will be fragment cached.
-      def content_for(name, content = nil, options = {}, &block)
+      def content_for(name, content = nil, options = {}, &)
         if content || block_given?
           if block_given?
             options = content if content
-            content = capture(&block)
+            content = capture(&)
           end
           if content
             options[:flush] ? @view_flow.set(name, content) : @view_flow.append(name, content)
@@ -172,8 +172,8 @@ module ActionView
       # concatenate several times to the same buffer when rendering a given
       # template, you should use +content_for+, if not, use +provide+ to tell
       # the layout to stop looking for more contents.
-      def provide(name, content = nil, &block)
-        content = capture(&block) if block_given?
+      def provide(name, content = nil, &)
+        content = capture(&) if block_given?
         result = @view_flow.append!(name, content) if content
         result unless content
       end
@@ -201,11 +201,10 @@ module ActionView
       def with_output_buffer(buf = nil) # :nodoc:
         unless buf
           buf = ActionView::OutputBuffer.new
-          if output_buffer && output_buffer.respond_to?(:encoding)
-            buf.force_encoding(output_buffer.encoding)
-          end
+          buf.force_encoding(output_buffer.encoding) if output_buffer && output_buffer.respond_to?(:encoding)
         end
-        self.output_buffer, old_buffer = buf, output_buffer
+        self.output_buffer = buf
+        old_buffer = output_buffer
         yield
         output_buffer
       ensure

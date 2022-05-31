@@ -1,11 +1,13 @@
 # frozen_string_literal: true
 
-require "rails-html-sanitizer"
+require 'rails-html-sanitizer'
 
 module ActionText
   module ContentHelper
     mattr_accessor(:sanitizer) { Rails::Html::Sanitizer.safe_list_sanitizer.new }
-    mattr_accessor(:allowed_tags) { sanitizer.class.allowed_tags + [ ActionText::Attachment.tag_name, "figure", "figcaption" ] }
+    mattr_accessor(:allowed_tags) do
+      sanitizer.class.allowed_tags + [ActionText::Attachment.tag_name, 'figure', 'figcaption']
+    end
     mattr_accessor(:allowed_attributes) { sanitizer.class.allowed_attributes + ActionText::Attachment::ATTRIBUTES }
     mattr_accessor(:scrubber)
 
@@ -15,7 +17,8 @@ module ActionText
     end
 
     def sanitize_action_text_content(content)
-      sanitizer.sanitize(content.to_html, tags: allowed_tags, attributes: allowed_attributes, scrubber: scrubber).html_safe
+      sanitizer.sanitize(content.to_html, tags: allowed_tags, attributes: allowed_attributes,
+                                          scrubber:).html_safe
     end
 
     def render_action_text_attachments(content)
@@ -36,15 +39,11 @@ module ActionText
     end
 
     def render_action_text_attachment(attachment, locals: {}) # :nodoc:
-      options = { locals: locals, object: attachment, partial: attachment }
+      options = { locals:, object: attachment, partial: attachment }
 
-      if attachment.respond_to?(:to_attachable_partial_path)
-        options[:partial] = attachment.to_attachable_partial_path
-      end
+      options[:partial] = attachment.to_attachable_partial_path if attachment.respond_to?(:to_attachable_partial_path)
 
-      if attachment.respond_to?(:model_name)
-        options[:as] = attachment.model_name.element
-      end
+      options[:as] = attachment.model_name.element if attachment.respond_to?(:model_name)
 
       render(**options).chomp
     end

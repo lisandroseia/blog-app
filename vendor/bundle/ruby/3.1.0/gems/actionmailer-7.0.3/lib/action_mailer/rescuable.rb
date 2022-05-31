@@ -15,15 +15,16 @@ module ActionMailer # :nodoc:
 
     def handle_exceptions # :nodoc:
       yield
-    rescue => exception
-      rescue_with_handler(exception) || raise
+    rescue StandardError => e
+      rescue_with_handler(e) || raise
     end
 
     private
-      def process(...)
-        handle_exceptions do
-          super
-        end
+
+    def process(...)
+      handle_exceptions do
+        super
       end
+    end
   end
 end

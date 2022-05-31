@@ -215,21 +215,24 @@ module ActionDispatch
       end
 
       protected
-        def optimize_routes_generation?
-          _routes.optimize_routes_generation? && default_url_options.empty?
-        end
+
+      def optimize_routes_generation?
+        _routes.optimize_routes_generation? && default_url_options.empty?
+      end
 
       private
-        def _with_routes(routes) # :doc:
-          old_routes, @_routes = @_routes, routes
-          yield
-        ensure
-          @_routes = old_routes
-        end
 
-        def _routes_context # :doc:
-          self
-        end
+      def _with_routes(routes) # :doc:
+        old_routes = @_routes
+        @_routes = routes
+        yield
+      ensure
+        @_routes = old_routes
+      end
+
+      def _routes_context # :doc:
+        self
+      end
     end
   end
 end

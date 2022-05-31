@@ -4,7 +4,7 @@ module ActionText
   class AttachmentGallery
     include ActiveModel::Model
 
-    TAG_NAME = "div"
+    TAG_NAME = 'div'
     private_constant :TAG_NAME
 
     class << self

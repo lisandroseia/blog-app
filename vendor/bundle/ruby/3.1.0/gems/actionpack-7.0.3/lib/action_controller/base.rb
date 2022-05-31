@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "action_view"
-require "action_controller/log_subscriber"
-require "action_controller/metal/params_wrapper"
+require 'action_view'
+require 'action_controller/log_subscriber'
+require 'action_controller/metal/params_wrapper'
 
 module ActionController
   # Action Controllers are the core of a web request in \Rails. They are made up of one or more actions that are executed
@@ -258,10 +258,10 @@ module ActionController
     setup_renderer!
 
     # Define some internal variables that should not be propagated to the view.
-    PROTECTED_IVARS = AbstractController::Rendering::DEFAULT_PROTECTED_INSTANCE_VARIABLES + %i(
+    PROTECTED_IVARS = AbstractController::Rendering::DEFAULT_PROTECTED_INSTANCE_VARIABLES + %i[
       @_params @_response @_request @_config @_url_options @_action_has_layout @_view_context_class
       @_view_renderer @_lookup_context @_routes @_view_runtime @_db_runtime @_helper_proxy
-    )
+    ]
 
     def _protected_ivars
       PROTECTED_IVARS

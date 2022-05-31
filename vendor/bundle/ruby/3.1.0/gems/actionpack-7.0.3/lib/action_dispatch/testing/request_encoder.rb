@@ -5,8 +5,8 @@ module ActionDispatch
     class IdentityEncoder
       def content_type; end
       def accept_header; end
-      def encode_params(params); params; end
-      def response_parser; -> body { body }; end
+      def encode_params(params) = params
+      def response_parser() = ->(body) { body }
     end
 
     @encoders = { identity: IdentityEncoder.new }
@@ -18,11 +18,11 @@ module ActionDispatch
 
       unless @mime
         raise ArgumentError, "Can't register a request encoder for " \
-          "unregistered MIME Type: #{mime_name}. See `Mime::Type.register`."
+                             "unregistered MIME Type: #{mime_name}. See `Mime::Type.register`."
       end
 
-      @response_parser = response_parser || -> body { body }
-      @param_encoder   = param_encoder   || :"to_#{@mime.symbol}".to_proc
+      @response_parser = response_parser || ->(body) { body }
+      @param_encoder = param_encoder || :"to_#{@mime.symbol}".to_proc
     end
 
     def content_type
@@ -50,6 +50,6 @@ module ActionDispatch
       @encoders[mime_name] = new(mime_name, param_encoder, response_parser)
     end
 
-    register_encoder :json, response_parser: -> body { JSON.parse(body) }
+    register_encoder :json, response_parser: ->(body) { JSON.parse(body) }
   end
 end

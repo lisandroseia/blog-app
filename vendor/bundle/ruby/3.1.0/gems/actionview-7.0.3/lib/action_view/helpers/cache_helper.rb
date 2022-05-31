@@ -165,11 +165,11 @@ module ActionView
       #
       # This will include both records as part of the cache key and updating either of them will
       # expire the cache.
-      def cache(name = {}, options = {}, &block)
+      def cache(name = {}, options = {}, &)
         if controller.respond_to?(:perform_caching) && controller.perform_caching
           CachingRegistry.track_caching do
             name_options = options.slice(:skip_digest)
-            safe_concat(fragment_for(cache_fragment_name(name, **name_options), options, &block))
+            safe_concat(fragment_for(cache_fragment_name(name, **name_options), options, &))
           end
         else
           yield
@@ -212,9 +212,9 @@ module ActionView
       #     <b>All the topics on this project</b>
       #     <%= render project.topics %>
       #   <% end %>
-      def cache_if(condition, name = {}, options = {}, &block)
+      def cache_if(condition, name = {}, options = {}, &)
         if condition
-          cache(name, options, &block)
+          cache(name, options, &)
         else
           yield
         end
@@ -228,8 +228,8 @@ module ActionView
       #     <b>All the topics on this project</b>
       #     <%= render project.topics %>
       #   <% end %>
-      def cache_unless(condition, name = {}, options = {}, &block)
-        cache_if !condition, name, options, &block
+      def cache_unless(condition, name = {}, options = {}, &)
+        cache_if(!condition, name, options, &)
       end
 
       # This helper returns the name of a cache key for a given fragment cache
@@ -246,7 +246,8 @@ module ActionView
       end
 
       def digest_path_from_template(template) # :nodoc:
-        digest = Digestor.digest(name: template.virtual_path, format: template.format, finder: lookup_context, dependencies: view_cache_dependencies)
+        digest = Digestor.digest(name: template.virtual_path, format: template.format, finder: lookup_context,
+                                 dependencies: view_cache_dependencies)
 
         if digest.present?
           "#{template.virtual_path}:#{digest}"
@@ -255,25 +256,26 @@ module ActionView
         end
       end
 
-    private
+      private
+
       def fragment_name_with_digest(name, digest_path)
-        name = controller.url_for(name).split("://").last if name.is_a?(Hash)
+        name = controller.url_for(name).split('://').last if name.is_a?(Hash)
 
         if @current_template&.virtual_path || digest_path
           digest_path ||= digest_path_from_template(@current_template)
-          [ digest_path, name ]
+          [digest_path, name]
         else
           name
         end
       end
 
-      def fragment_for(name = {}, options = nil, &block)
+      def fragment_for(name = {}, options = nil, &)
         if content = read_fragment_for(name, options)
           @view_renderer.cache_hits[@current_template&.virtual_path] = :hit if defined?(@view_renderer)
           content
         else
           @view_renderer.cache_hits[@current_template&.virtual_path] = :miss if defined?(@view_renderer)
-          write_fragment_for(name, options, &block)
+          write_fragment_for(name, options, &)
         end
       end
 
@@ -286,9 +288,7 @@ module ActionView
         yield
         output_safe = output_buffer.html_safe?
         fragment = output_buffer.slice!(pos..-1)
-        if output_safe
-          self.output_buffer = output_buffer.class.new(output_buffer)
-        end
+        self.output_buffer = output_buffer.class.new(output_buffer) if output_safe
         controller.write_fragment(name, fragment, options)
       end
 

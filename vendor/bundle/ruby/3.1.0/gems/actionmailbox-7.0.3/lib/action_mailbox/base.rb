@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "active_support/rescuable"
+require 'active_support/rescuable'
 
-require "action_mailbox/callbacks"
-require "action_mailbox/routing"
+require 'action_mailbox/callbacks'
+require 'action_mailbox/routing'
 
 module ActionMailbox
   # The base class for all application mailboxes. Not intended to be inherited from directly. Inherit from
@@ -62,9 +62,11 @@ module ActionMailbox
   #   end
   class Base
     include ActiveSupport::Rescuable
-    include ActionMailbox::Callbacks, ActionMailbox::Routing
+    include ActionMailbox::Routing
+    include ActionMailbox::Callbacks
 
     attr_reader :inbound_email
+
     delegate :mail, :delivered!, :bounced!, to: :inbound_email
 
     delegate :logger, to: ActionMailbox
@@ -83,9 +85,9 @@ module ActionMailbox
           process
         end
       end
-    rescue => exception
+    rescue StandardError => e
       # TODO: Include a reference to the inbound_email in the exception raised so error handling becomes easier
-      rescue_with_handler(exception) || raise
+      rescue_with_handler(e) || raise
     end
 
     def process
@@ -96,7 +98,6 @@ module ActionMailbox
       inbound_email.delivered? || inbound_email.bounced?
     end
 
-
     # Enqueues the given +message+ for delivery and changes the inbound email's status to +:bounced+.
     def bounce_with(message)
       inbound_email.bounced!
@@ -104,14 +105,15 @@ module ActionMailbox
     end
 
     private
-      def track_status_of_inbound_email
-        inbound_email.processing!
-        yield
-        inbound_email.delivered! unless inbound_email.bounced?
-      rescue
-        inbound_email.failed!
-        raise
-      end
+
+    def track_status_of_inbound_email
+      inbound_email.processing!
+      yield
+      inbound_email.delivered! unless inbound_email.bounced?
+    rescue StandardError
+      inbound_email.failed!
+      raise
+    end
   end
 end
 
