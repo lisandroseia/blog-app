@@ -27,6 +27,10 @@ run "rails db:setup"
 
 Run "rails s" to start the aplication
 
+### run tests
+
+run "bundle exec rspec"
+
 👤 **Lisandro Seia**
 
  **GitHub**  | [@lisandroseia](https://github.com/lisandroseia)
