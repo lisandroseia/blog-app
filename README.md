@@ -23,6 +23,8 @@ run "bundle install" to install dependancies
 ### database prep
 
 run "rails db:setup"
+run "rails db:migrate"
+
 ### Run the app
 
 Run "rails s" to start the aplication
