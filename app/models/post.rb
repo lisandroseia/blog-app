@@ -5,6 +5,10 @@ class Post < ApplicationRecord
   after_save :increase_posts_counter
   after_destroy :decrease_posts_counter
 
+  def last_comments
+    comments.order(created_at: :desc).limit(5)
+  end
+
   private
 
   def increase_posts_counter
