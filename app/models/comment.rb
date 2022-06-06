@@ -1,5 +1,5 @@
 class Comment < ApplicationRecord
-  belongs_to :author, class_name: 'user'
+  belongs_to :author, class_name: 'User'
   belongs_to :post
   after_save :increase_coments_counter
   after_destroy :decrease_coments_counter
