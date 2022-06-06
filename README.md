@@ -24,7 +24,7 @@ run "bundle install" to install dependancies
 
 run "rails db:setup"
 run "rails db:migrate"
-
+run "rails db:seed" if you want some default values in the project!
 ### Run the app
 
 Run "rails s" to start the aplication
