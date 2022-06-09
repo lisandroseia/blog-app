@@ -5,7 +5,6 @@ class Like < ApplicationRecord
   after_destroy :decrease_likes_counter
   validates :author_id, uniqueness: { scope: :post_id }
 
-
   def increase_likes_counter
     post.increment!(:likes_counter)
   end
