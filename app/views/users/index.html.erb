@@ -1,3 +1,6 @@
+<%= link_to 'New post', new_user_post_path(user_id: @user_current.id) %>
 <ul>
   <%= render partial: "renders/user", collection: @users %>
 </ul>
+
+/users/:user_id/posts/new
