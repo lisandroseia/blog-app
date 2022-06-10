@@ -7,6 +7,7 @@
   <p>Comments: <%= post.comments_counter || 0%> likes: <%= post.likes_counter || 0%></p>
 </div>
 <p class="main-post"><%= post.text%> </p>
+<%= render partial: 'renders/new_like' %>
 </div>
 <div class="comments">
 <div class="post-data comment">
@@ -14,4 +15,5 @@
      <%= render partial: "renders/comment", collection: post.comments.order(created_at: :desc) %>
 </div>
 </div>
+<%= render partial: 'renders/new_comment' %>
 </section> 

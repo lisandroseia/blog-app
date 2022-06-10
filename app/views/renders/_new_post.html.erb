@@ -1,0 +1,13 @@
+<%= form_with model:post, url: user_posts_url do |f| %>
+  <div>
+    <%= f.label :title%>
+    <%= f.text_field :title, required:true %>
+  </div>
+
+  <div>
+    <%= f.label :text%>
+    <%= f.text_field :text, required:true %>
+  </div>
+
+  <%= f.submit 'Create' %>
+<%end%>
