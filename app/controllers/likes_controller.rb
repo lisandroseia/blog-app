@@ -7,8 +7,11 @@ class LikesController < ApplicationController
       format.html do
         if !Like.find_by(author_id: params[:user_id],
                          post_id: params[:post_id]) && like.save
-          redirect_back(fallback_location: root_path)
+          flash[:succes] = 'Liked!'
+        else
+          flash[:error] = 'already liked!'
         end
+        redirect_back(fallback_location: root_path)
       end
     end
   end

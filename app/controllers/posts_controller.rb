@@ -6,7 +6,7 @@ class PostsController < ApplicationController
   end
 
   def show
-    @user = current_user
+    @user = User.find(params[:user_id])
     @post_current = Post.find(params[:id])
   end
 
@@ -26,8 +26,10 @@ class PostsController < ApplicationController
     respond_to do |format|
       format.html do
         if post.save
+          flash[:success] = 'Post created!'
           redirect_back(fallback_location: root_path)
         else
+          flash[:error] = 'Try again'
           render :new
         end
       end
