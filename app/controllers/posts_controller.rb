@@ -18,13 +18,15 @@ class PostsController < ApplicationController
   end
 
   def create
+    @user = current_user
+    data = params.require(:post).permit(:title, :text)
+    post = Post.new(author: @user, title: data[:title], text: data[:text])
+    post.likes_counter = 0
+    post.comments_counter = 0
     respond_to do |format|
       format.html do
-        @user = User.find(params[:user_id])
-        data = params.require(:post).permit(:title, :text)
-        post = Post.new(author: @user, title: data[:title], text: data[:text])
         if post.save
-          redirect_to action: :index, user_id: @user.id
+          redirect_back(fallback_location: root_path)
         else
           render :new
         end
