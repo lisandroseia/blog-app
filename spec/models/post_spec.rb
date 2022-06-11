@@ -20,6 +20,28 @@ RSpec.describe Post, type: :model do
       expect(subject).to_not be_valid
     end
 
+    it 'Title can not be nil' do
+      subject.title = nil
+      expect(subject).to_not be_valid
+    end
+    it 'Last_comments return 5 last comments' do
+      (1..6).each do
+        Comment.create(text: 'post', author: @user, post: subject)
+      end
+      lasts = subject.last_comments
+      expect(lasts.length).to eq(5)
+    end
+  end
+  context 'Post model counters' do
+    before(:example) do
+      @user = User.first
+    end
+
+    subject do
+      Post.create(author: @user, title: 'Post', text: 'Lorem Ipsem')
+    end
+    before { subject.save }
+
     it 'comments_counter and likes_counter are set by default' do
       expect(subject).to be_valid
     end
@@ -34,16 +56,16 @@ RSpec.describe Post, type: :model do
       expect(subject).to_not be_valid
     end
 
-    it 'Title can not be nil' do
-      subject.title = nil
-      expect(subject).to_not be_valid
+    it 'Increase comments counter' do
+      value = subject.comments_counter
+      Comment.create(text: 'Hi', author: @user, post: subject)
+      expect(subject.comments_counter).to eq(value + 1)
     end
-    it 'Last_comments return 5 last comments' do
-      (1..6).each do
-        Comment.create(text: 'post', author: @user, post: subject)
-      end
-      lasts = subject.last_comments
-      expect(lasts.length).to eq(5)
+
+    it 'Increase likes counter' do
+      value = subject.likes_counter
+      Like.create(author: @user, post: subject)
+      expect(subject.likes_counter).to eq(value + 1)
     end
   end
 end
