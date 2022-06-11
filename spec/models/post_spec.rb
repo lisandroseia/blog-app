@@ -11,6 +11,15 @@ RSpec.describe Post, type: :model do
     end
     before { subject.save }
 
+    it 'title cant have more than 250 chars' do
+      str = '0123456789'
+      (1..26).each do
+        str += str
+      end
+      subject.title = str
+      expect(subject).to_not be_valid
+    end
+
     it 'comments_counter and likes_counter are set by default' do
       expect(subject).to be_valid
     end
