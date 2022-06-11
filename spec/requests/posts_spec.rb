@@ -3,7 +3,7 @@ require_relative '../rails_helper'
 RSpec.describe 'posts render correct template', type: :request do
   context 'Get #index posts' do
     before :each do
-      get '/users/index/posts'
+      get '/users/1/posts'
     end
     it 'runs template' do
       expect(response).to render_template('posts/index')
@@ -14,12 +14,12 @@ RSpec.describe 'posts render correct template', type: :request do
     end
 
     it 'gives correct body' do
-      expect(response.body).to include('inside post index')
+      expect(response.body).to include('Joey')
     end
   end
   context 'Get #index' do
     before :each do
-      get '/users/index/posts/index'
+      get '/users/1/posts/1'
     end
     it 'runs template' do
       expect(response).to render_template('posts/show')
@@ -30,7 +30,7 @@ RSpec.describe 'posts render correct template', type: :request do
     end
 
     it 'gives correct body' do
-      expect(response.body).to include('inside post show')
+      expect(response.body).to include('Food')
     end
   end
 end

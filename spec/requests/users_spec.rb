@@ -3,7 +3,7 @@ require 'rails_helper'
 RSpec.describe 'users render correct template', type: :request do
   context 'Get *index' do
     before :each do
-      get '/users/index'
+      get '/users/1'
     end
     it 'runs template' do
       expect(response).to render_template('users/show')
@@ -14,7 +14,7 @@ RSpec.describe 'users render correct template', type: :request do
     end
 
     it 'gives correct body' do
-      expect(response.body).to include('inside user show')
+      expect(response.body).to include('Joey')
     end
   end
   context 'Get #index' do
@@ -30,7 +30,7 @@ RSpec.describe 'users render correct template', type: :request do
     end
 
     it 'gives correct body' do
-      expect(response.body).to include('inside user index')
+      expect(response.body).to include('Joey')
     end
   end
 end
