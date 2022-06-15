@@ -1,57 +1,85 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;1,700&display=swap');
- *{
-    font-family: 'Roboto', sans-serif;
- }
- .form{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 80%;
-    margin-inline: auto;
- }
- .form  input:focus{
-    outline:none
- }
- input{
-    margin-bottom: 20px;
- }
- .field{
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    margin-inline: auto ;
- }
- .link{
-    text-decoration: none;
-    color: rgb(70, 68, 68);
-    margin: 20px 0;
-    text-decoration: none;
-    position: relative;
- }
- .link::before {
-    content: '';
-    background-color: rgba(199, 111, 111, 0.75);
-    position: absolute;
-    left: 0;
-    bottom: 3px;
-    width: 100%;
-    height: 8px;
-    z-index: -1;
-    transition: all .3s ease-in-out;
-  }
-  .link:hover::before {
-    bottom: 0;
-    height: 100%;
-  }
-.actions > button{
-    width: 200px;
+
+* {
+  font-family: 'Roboto', sans-serif;
 }
- h2{
-    font-size: 20px;
-    text-align: center;
-    color: rgb(53, 52, 52);
- }
- .remember{
-    display: flex;
-    align-self: flex-start;
- }
+
+.form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 50%;
+  margin-inline: auto;
+}
+
+input {
+  margin-bottom: 20px;
+}
+
+.actions > input {
+  border-color: rgba(199, 111, 111, 0.75);
+  border: 3px solid;
+  border-radius: 5px;
+  padding: 5px 10px;
+}
+
+.form input:focus {
+  outline: none;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-inline: auto;
+}
+
+.link {
+  text-decoration: none;
+  color: rgb(70, 68, 68);
+  margin: 20px 0;
+  position: relative;
+}
+
+.link::before {
+  content: '';
+  background-color: rgba(199, 111, 111, 0.75);
+  position: absolute;
+  left: 0;
+  bottom: 3px;
+  width: 100%;
+  height: 8px;
+  z-index: -1;
+  transition: all 0.3s ease-in-out;
+}
+
+.link:hover::before {
+  bottom: 0;
+  height: 100%;
+}
+
+.actions > input:hover {
+  cursor: pointer;
+  background-color: rgba(199, 111, 111, 0.75);
+}
+
+h2 {
+  font-size: 20px;
+  text-align: center;
+  color: rgb(53, 52, 52);
+}
+
+.remember {
+  display: flex;
+  align-self: flex-start;
+}
+
+.login {
+  display: flex;
+  flex-direction: column;
+}
+
+.links {
+  width: 50%;
+  margin-inline: auto;
+}

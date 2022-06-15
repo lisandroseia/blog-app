@@ -1,6 +1,8 @@
 <%= link_to user do %>
   <li class="card-wrap">
+ <% if user.photo %>
     <%= image_tag user.photo, class:'card-image', alt: 'photo' %>
+ <% end %>
   
     <div class="card">
       <h2 class="card-title">
