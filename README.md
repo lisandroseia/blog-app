@@ -42,6 +42,9 @@ run "bundle exec rspec"
  **GitHub**  | [@lisandroseia](https://github.com/lisandroseia)
  **LinkdIn** | [LinkedIn](https://www.linkedin.com/in/lisandro-seia-295120225/)
 
+ 👤 **Hemerson Foreste**
+
+
 ## 🤝 Contributing
 
 Contributions, issues, and feature requests are welcome!
