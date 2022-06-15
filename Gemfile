@@ -77,3 +77,6 @@ group :development, :test do
 end
 
 gem 'erb-formatter'
+
+gem 'devise'
+gem 'mailcatcher'

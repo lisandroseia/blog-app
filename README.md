@@ -29,6 +29,9 @@ run "rails db:seed" if you want some default values in the project!
 ### Run the app
 
 Run "rails s" to start the aplication
+run 'mailcatcher'
+
+open 'http://127.0.0.1:1080' to check mail sender and be able to confirm your email
 
 ### run tests
 
@@ -38,6 +41,9 @@ run "bundle exec rspec"
 
  **GitHub**  | [@lisandroseia](https://github.com/lisandroseia)
  **LinkdIn** | [LinkedIn](https://www.linkedin.com/in/lisandro-seia-295120225/)
+
+ 👤 **Hemerson Foreste**
+
 
 ## 🤝 Contributing
 
