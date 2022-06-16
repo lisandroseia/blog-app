@@ -1,5 +1,5 @@
 class CommentsController < ApplicationController
-  load_and_authorize_resource :except => :create
+  load_and_authorize_resource except: :create
 
   def create
     @post = Post.find(params[:post_id])

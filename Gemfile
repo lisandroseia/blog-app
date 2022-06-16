@@ -78,6 +78,6 @@ end
 
 gem 'erb-formatter'
 
+gem 'cancancan'
 gem 'devise'
 gem 'mailcatcher'
-gem 'cancancan'
