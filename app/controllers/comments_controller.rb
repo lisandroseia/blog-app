@@ -1,5 +1,5 @@
 class CommentsController < ApplicationController
-  load_and_authorize_resource
+  load_and_authorize_resource :except => :create
 
   def create
     @post = Post.find(params[:post_id])
@@ -20,8 +20,9 @@ class CommentsController < ApplicationController
   end
 
   def destroy
-    id = params[:id]
-    comment.destroy(id)
+    @comment = Comment.find(params[:id])
+    @comment.destroy
+    flash[:success] = 'Comment was deleted'
     redirect_back(fallback_location: root_path)
   end
 end
