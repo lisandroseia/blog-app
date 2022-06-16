@@ -5,8 +5,8 @@ title = %w[Gossip Chat Blog Rails Ruby Milestone Portfolio]
 User.create(name: 'Tom',
             photo: 'https://images.unsplash.com/photo-1508921912186-1d1a45ebb3c1?ixlib=rb-1.2.1&ixid=MnwxM[…]G90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80', bio: 'Teacher from Mexico.', email: 'tom@gmail.com', password: 'tom12345', confirmed_at: DateTime.now)
 User.create(name: 'Lilly',
-            photo: 'https://images.unsplash.com/photo-1508921912186-1d1a45ebb3c1?ixlib=rb-1.2.1&ixid=MnwxM[…]G90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80', bio: 'Teacher from Poland.', email: 'lily@gmail.com', password: 'lily12345')
-names.each { |item| User.create(name: item, photo: 'https://images.unsplash.com/photo-1508921912186-1d1a45ebb3c1?ixlib=rb-1.2.1&ixid=MnwxM[…]G90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80', bio: generate_lorem, email: "#{item}@gmail.com", password: "#{item}12345") }
+            photo: 'https://images.unsplash.com/photo-1508921912186-1d1a45ebb3c1?ixlib=rb-1.2.1&ixid=MnwxM[…]G90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80', bio: 'Teacher from Poland.', email: 'lily@gmail.com', password: 'lily12345', role: 'admin')
+  names.each { |item| User.create(name: item, photo: 'https://images.unsplash.com/photo-1508921912186-1d1a45ebb3c1?ixlib=rb-1.2.1&ixid=MnwxM[…]G90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80', bio: generate_lorem, email: "#{item}@gmail.com", password: "#{item}12345") }
 
 Post.create(author: User.first, title: 'Hello', text: 'This is my first post')
 Post.create(author: User.first, title: 'Hello', text: 'This is my second post')

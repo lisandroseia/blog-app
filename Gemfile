@@ -80,3 +80,4 @@ gem 'erb-formatter'
 
 gem 'devise'
 gem 'mailcatcher'
+gem 'cancancan'
