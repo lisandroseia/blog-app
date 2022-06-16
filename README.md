@@ -44,6 +44,10 @@ run "bundle exec rspec"
 
  👤 **Hemerson Foreste**
 
+- GitHub: [@ForHemer](https://github.com/ForHemer)
+- Twitter: [@HemersonForeste](https://twitter.com/HemersonForeste)
+- LinkedIn: [LinkedIn](https://linkedin.com/in/hemerson-foreste-890685197)
+
 
 ## 🤝 Contributing
 

@@ -4,4 +4,8 @@
 </h2>
 <p><%= post.text%> </p>
 <p>Comments: <%= post.comments_counter || 0%> likes: <%= post.likes_counter || 0%></p>
+      <%= link_to "See Post", user_post_path(user_id: post.author_id, id: post.id), class:"link" %>
+      <% if can? :destroy, post %>
+        <%= button_to "Delete Post", user_post_path(user_id: post.author_id, id: post.id), class:"link", method: :delete %>
+      <% end %>
 </li>

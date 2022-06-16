@@ -1,4 +1,6 @@
 class CommentsController < ApplicationController
+  load_and_authorize_resource except: :create
+
   def create
     @post = Post.find(params[:post_id])
     @user = current_user
@@ -15,5 +17,12 @@ class CommentsController < ApplicationController
         redirect_back(fallback_location: root_path)
       end
     end
+  end
+
+  def destroy
+    @comment = Comment.find(params[:id])
+    @comment.destroy
+    flash[:success] = 'Comment was deleted'
+    redirect_back(fallback_location: root_path)
   end
 end
