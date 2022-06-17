@@ -64,21 +64,17 @@ group :development do
   # gem "spring"
 end
 
-group :test do
+group :development, :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
   gem 'capybara'
+  gem 'database_cleaner'
+  gem 'rails-controller-testing'
+  gem 'rspec-rails', '~> 6.0.0.rc1'
   gem 'selenium-webdriver'
   gem 'webdrivers'
 end
 
-group :development, :test do
-  gem 'database_cleaner'
-  gem 'rails-controller-testing'
-  gem 'rspec-rails', '~> 6.0.0.rc1'
-end
-
-gem 'erb-formatter'
-
 gem 'cancancan'
 gem 'devise'
+gem 'erb-formatter'
 gem 'mailcatcher'
