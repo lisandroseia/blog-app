@@ -1,7 +1,6 @@
 require 'rails_helper'
 
 RSpec.describe 'Post Show Page', type: :feature do
-
   before(:each) do
     visit new_user_session_path
     fill_in 'Email', with: 'lily@gmail.com'
