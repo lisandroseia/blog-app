@@ -11,8 +11,11 @@
   </head>
 
   <body>
-    <%= render partial: 'renders/home' %>
     <%= render partial: 'renders/flash' %>
+    <% if user_signed_in? %>
+      <%= render partial: 'renders/home' %>
+      <%= link_to("Log out", destroy_user_session_path, method: :delete, data: { turbo_method: :delete }) %>
+    <% end %>
     <%= yield %>
   </body>
 </html>
