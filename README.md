@@ -35,6 +35,8 @@ open 'http://127.0.0.1:1080' to check mail sender and be able to confirm your em
 
 ### run tests
 
+in order to make the test works you will need the seed, so please, go to the "database prep" section
+
 run "bundle exec rspec"
 
 👤 **Lisandro Seia**
