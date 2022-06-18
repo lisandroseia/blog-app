@@ -1,7 +1,6 @@
-class Api::CommentsController <  ActionController::Base
+class Api::CommentsController < ActionController::Base
   skip_before_action :authenticate_user!
   before_action :authorize_request
-
 
   def index
     @post = Post.find_by(id: params[:post_id], author_id: params[:user_id])
