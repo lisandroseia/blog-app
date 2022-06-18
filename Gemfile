@@ -78,3 +78,5 @@ gem 'cancancan'
 gem 'devise'
 gem 'erb-formatter'
 gem 'mailcatcher'
+
+gem 'jwt'

@@ -4,6 +4,7 @@ Rails.application.routes.draw do
 
   # Defines the root path route ("/")
   # root "articles#index"
+  
   root 'users#index'
   resources :users, only: %i[index show] do
     resources :posts, only: %i[index show new create destroy] do
@@ -11,4 +12,13 @@ Rails.application.routes.draw do
       resources :likes, only: %i[create]
     end
   end
+
+  namespace :api, defaults: {format: 'json'} do
+    post 'login', to: 'authentication#authenticate'
+    resources :users, only: %i[index show] do
+      resources :posts, only: %i[index show ] do
+        resources :comments, only: %i[index create]
+      end
+  end
+end
 end
